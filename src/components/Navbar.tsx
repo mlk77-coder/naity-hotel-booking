@@ -4,11 +4,11 @@ import { Menu, X } from "lucide-react";
 import naityLogo from "@/assets/naity-logo.png";
 
 const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/hotels", label: "Hotels" },
-  { to: "/how-it-works", label: "How It Works" },
-  { to: "/about", label: "About" },
-  { to: "/contact", label: "Contact" },
+  { to: "/", label: "الرئيسية" },
+  { to: "/hotels", label: "الفنادق" },
+  { to: "/how-it-works", label: "كيف يعمل" },
+  { to: "/about", label: "عن نايتي" },
+  { to: "/contact", label: "تواصل معنا" },
 ];
 
 const Navbar = () => {
@@ -19,11 +19,10 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-card/90 backdrop-blur-md border-b border-border/50">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2">
-          <img src={naityLogo} alt="Naity" className="h-10 w-auto" />
-          <span className="text-xl font-bold text-accent">Naity</span>
+          <img src={naityLogo} alt="نايتي" className="h-10 w-auto" />
+          <span className="text-xl font-bold text-accent">نايتي</span>
         </Link>
 
-        {/* Desktop */}
         <div className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link
@@ -40,7 +39,6 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* Mobile toggle */}
         <button
           className="md:hidden p-2 rounded-lg hover:bg-muted"
           onClick={() => setOpen(!open)}
@@ -49,7 +47,6 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
         <div className="md:hidden border-t border-border bg-card animate-fade-in">
           <div className="container mx-auto px-4 py-3 flex flex-col gap-1">

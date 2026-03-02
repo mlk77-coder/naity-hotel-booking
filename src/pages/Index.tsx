@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin, Calendar, Users, Shield, Zap, CheckCircle, ArrowRight } from "lucide-react";
+import { Search, MapPin, Calendar, Users, Shield, Zap, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { hotels, cities } from "@/lib/mockData";
 import HotelCard from "@/components/HotelCard";
@@ -28,8 +28,8 @@ const Index = () => {
       {/* Hero */}
       <section className="relative overflow-hidden gradient-hero">
         <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-secondary/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-10 w-72 h-72 bg-secondary/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 left-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         </div>
         <div className="container mx-auto px-4 py-20 md:py-32 relative">
           <motion.div
@@ -42,16 +42,16 @@ const Index = () => {
               custom={0}
               className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-accent leading-tight"
             >
-              Find Your Perfect Stay with{" "}
-              <span className="text-primary">Naity</span>
+              اعثر على إقامتك المثالية مع{" "}
+              <span className="text-primary">نايتي</span>
             </motion.h1>
             <motion.p
               variants={fadeUp}
               custom={1}
               className="text-lg text-muted-foreground max-w-lg mx-auto"
             >
-              Book hotels connected directly to the Hajiz management system.
-              Real-time availability. Instant confirmation.
+              احجز فنادق متصلة مباشرة بنظام حاجز لإدارة الفنادق.
+              توفر فوري. تأكيد لحظي.
             </motion.p>
 
             {/* Search */}
@@ -68,7 +68,7 @@ const Index = () => {
                   onChange={(e) => setCity(e.target.value)}
                   className="w-full bg-transparent py-3 text-sm outline-none text-foreground"
                 >
-                  <option value="">Any city</option>
+                  <option value="">أي مدينة</option>
                   {cities.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
@@ -81,10 +81,10 @@ const Index = () => {
               <div className="flex items-center gap-2 px-3 bg-muted rounded-xl">
                 <Users className="w-4 h-4 text-primary shrink-0" />
                 <select className="bg-transparent py-3 text-sm outline-none text-foreground">
-                  <option>1 Guest</option>
-                  <option>2 Guests</option>
-                  <option>3 Guests</option>
-                  <option>4+ Guests</option>
+                  <option>1 ضيف</option>
+                  <option>2 ضيوف</option>
+                  <option>3 ضيوف</option>
+                  <option>+4 ضيوف</option>
                 </select>
               </div>
               <button
@@ -92,7 +92,7 @@ const Index = () => {
                 className="gradient-cta text-primary-foreground px-6 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shrink-0"
               >
                 <Search className="w-4 h-4" />
-                Search
+                بحث
               </button>
             </motion.form>
           </motion.div>
@@ -110,14 +110,14 @@ const Index = () => {
           >
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium">
               <Zap className="w-4 h-4" />
-              Powered by Hajiz
+              مدعوم بنظام حاجز
             </div>
             <h2 className="text-3xl font-bold text-foreground">
-              Connected Directly to Hotels
+              متصل مباشرة بالفنادق
             </h2>
             <p className="text-muted-foreground">
-              Every hotel on Naity uses the Hajiz management system internally.
-              This means you get real-time room availability, live pricing, and instant booking confirmations — no middlemen.
+              كل فندق على نايتي يستخدم نظام حاجز داخلياً.
+              هذا يعني أنك تحصل على توفر الغرف لحظياً، أسعار مباشرة، وتأكيد حجز فوري — بدون وسطاء.
             </p>
           </motion.div>
         </div>
@@ -127,12 +127,12 @@ const Index = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-foreground">Featured Hotels</h2>
+            <h2 className="text-2xl font-bold text-foreground">فنادق مميزة</h2>
             <button
               onClick={() => navigate("/hotels")}
               className="text-primary text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all"
             >
-              View all <ArrowRight className="w-4 h-4" />
+              عرض الكل <ArrowLeft className="w-4 h-4" />
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -155,24 +155,24 @@ const Index = () => {
       <section className="py-16 bg-muted/50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-foreground text-center mb-10">
-            Why Book with Naity?
+            لماذا تحجز مع نايتي؟
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 icon: Zap,
-                title: "Real-Time Availability",
-                desc: "Room data is fetched live from the hotel's Hajiz system. What you see is what you get.",
+                title: "توفر لحظي",
+                desc: "بيانات الغرف تُجلب مباشرة من نظام حاجز الخاص بالفندق. ما تراه هو ما تحصل عليه.",
               },
               {
                 icon: CheckCircle,
-                title: "Instant Confirmation",
-                desc: "Your booking is confirmed immediately through the Hajiz API. No waiting, no uncertainty.",
+                title: "تأكيد فوري",
+                desc: "حجزك يُؤكد فوراً عبر واجهة حاجز البرمجية. لا انتظار، لا شك.",
               },
               {
                 icon: Shield,
-                title: "Secure & Reliable",
-                desc: "End-to-end encrypted bookings with a trusted system used by hotels worldwide.",
+                title: "آمن وموثوق",
+                desc: "حجوزات مشفرة من البداية للنهاية مع نظام موثوق تستخدمه فنادق حول العالم.",
               },
             ].map((item, i) => (
               <motion.div

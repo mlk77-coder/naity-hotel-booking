@@ -11,9 +11,9 @@ const About = () => (
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-2xl mx-auto mb-16 space-y-4"
         >
-          <h1 className="text-4xl font-extrabold text-accent">About Naity</h1>
+          <h1 className="text-4xl font-extrabold text-accent">عن نايتي</h1>
           <p className="text-muted-foreground text-lg">
-            Modernizing hotel booking through direct connections with the Hajiz management system.
+            تحديث حجز الفنادق من خلال الاتصال المباشر بنظام حاجز لإدارة الفنادق.
           </p>
         </motion.div>
 
@@ -21,13 +21,13 @@ const About = () => (
           {[
             {
               icon: Target,
-              title: "Our Mission",
-              desc: "To bridge the gap between hotels and travelers by providing a seamless booking experience. Through the Hajiz + Naity ecosystem, we ensure every booking is accurate, instant, and reliable.",
+              title: "مهمتنا",
+              desc: "سد الفجوة بين الفنادق والمسافرين من خلال توفير تجربة حجز سلسة. عبر منظومة حاجز + نايتي، نضمن أن كل حجز دقيق وفوري وموثوق.",
             },
             {
               icon: Eye,
-              title: "Our Vision",
-              desc: "A world where every hotel, from boutique to luxury chain, uses Hajiz for operations and Naity for distribution — creating a trustworthy, transparent booking marketplace.",
+              title: "رؤيتنا",
+              desc: "عالم يستخدم فيه كل فندق، من البوتيك إلى السلسلة الفاخرة، نظام حاجز للعمليات ونايتي للتوزيع — لخلق سوق حجز موثوق وشفاف.",
             },
           ].map((item, i) => (
             <motion.div
@@ -55,13 +55,13 @@ const About = () => (
           className="mt-16 bg-muted/50 rounded-2xl p-8 max-w-4xl mx-auto"
         >
           <h2 className="text-2xl font-bold text-foreground mb-6 text-center flex items-center justify-center gap-2">
-            <Heart className="w-5 h-5 text-primary" /> Our Values
+            <Heart className="w-5 h-5 text-primary" /> قيمنا
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
-              { title: "Transparency", desc: "What you see is what you get. Real prices, real availability." },
-              { title: "Reliability", desc: "Every booking goes through Hajiz for instant, guaranteed confirmation." },
-              { title: "Innovation", desc: "Continuously improving the hotel-guest experience through technology." },
+              { title: "الشفافية", desc: "ما تراه هو ما تحصل عليه. أسعار حقيقية، توفر حقيقي." },
+              { title: "الموثوقية", desc: "كل حجز يمر عبر حاجز لتأكيد فوري ومضمون." },
+              { title: "الابتكار", desc: "تحسين مستمر لتجربة الفندق والضيف من خلال التكنولوجيا." },
             ].map((v, i) => (
               <div key={i} className="text-center space-y-2">
                 <h3 className="font-semibold text-foreground">{v.title}</h3>

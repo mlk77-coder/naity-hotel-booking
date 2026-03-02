@@ -31,29 +31,29 @@ const HotelsListing = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl font-extrabold text-accent mb-8"
         >
-          Browse Hotels
+          تصفح الفنادق
         </motion.h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters */}
           <motion.aside
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="lg:w-64 shrink-0 bg-card rounded-xl p-5 shadow-card border border-border/50 h-fit space-y-5"
           >
             <div className="flex items-center gap-2 text-foreground font-semibold">
               <SlidersHorizontal className="w-4 h-4 text-primary" />
-              Filters
+              التصفية
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">City</label>
+              <label className="text-sm font-medium text-foreground">المدينة</label>
               <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 className="w-full bg-muted rounded-lg px-3 py-2 text-sm outline-none text-foreground"
               >
-                <option value="">All Cities</option>
+                <option value="">جميع المدن</option>
                 {cities.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
@@ -61,22 +61,22 @@ const HotelsListing = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Min Stars</label>
+              <label className="text-sm font-medium text-foreground">الحد الأدنى للنجوم</label>
               <select
                 value={minStars}
                 onChange={(e) => setMinStars(Number(e.target.value))}
                 className="w-full bg-muted rounded-lg px-3 py-2 text-sm outline-none text-foreground"
               >
-                <option value={0}>Any</option>
+                <option value={0}>الكل</option>
                 {[3, 4, 5].map((s) => (
-                  <option key={s} value={s}>{s}+ Stars</option>
+                  <option key={s} value={s}>{s}+ نجوم</option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Max Price: ${maxPrice}
+                الحد الأقصى للسعر: <span dir="ltr">${maxPrice}</span>
               </label>
               <input
                 type="range"
@@ -93,7 +93,7 @@ const HotelsListing = () => {
           <div className="flex-1">
             {filtered.length === 0 ? (
               <p className="text-muted-foreground text-center py-20">
-                No hotels match your filters. Try adjusting your criteria.
+                لا توجد فنادق تطابق معايير البحث. حاول تعديل الفلاتر.
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">

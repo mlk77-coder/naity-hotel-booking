@@ -14,7 +14,7 @@ const HotelDetails = () => {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Hotel not found</h1>
+          <h1 className="text-2xl font-bold text-foreground">الفندق غير موجود</h1>
         </div>
       </Layout>
     );
@@ -48,23 +48,23 @@ const HotelDetails = () => {
             {hotel.rating} / 5
           </div>
           <div className="text-muted-foreground flex items-center gap-1">
-            {hotel.reviewCount} reviews
+            {hotel.reviewCount} تقييم
           </div>
-          <div className="ml-auto text-2xl font-bold text-foreground">
+          <div className="mr-auto text-2xl font-bold text-foreground" dir="ltr">
             From ${hotel.pricePerNight}
-            <span className="text-sm font-normal text-muted-foreground">/night</span>
+            <span className="text-sm font-normal text-muted-foreground">/ليلة</span>
           </div>
         </div>
 
         {/* Description */}
         <div>
-          <h2 className="text-xl font-bold text-foreground mb-3">About This Hotel</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">عن هذا الفندق</h2>
           <p className="text-muted-foreground leading-relaxed">{hotel.description}</p>
         </div>
 
         {/* Amenities */}
         <div>
-          <h2 className="text-xl font-bold text-foreground mb-3">Amenities</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">المرافق</h2>
           <div className="flex flex-wrap gap-2">
             {hotel.amenities.map((a) => (
               <span key={a} className="bg-muted text-muted-foreground px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
@@ -76,7 +76,7 @@ const HotelDetails = () => {
 
         {/* Rooms */}
         <div>
-          <h2 className="text-xl font-bold text-foreground mb-4">Available Rooms</h2>
+          <h2 className="text-xl font-bold text-foreground mb-4">الغرف المتاحة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {rooms.map((room, i) => (
               <motion.div
@@ -92,15 +92,15 @@ const HotelDetails = () => {
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-foreground">{room.type}</h3>
                     {room.available ? (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">Available</span>
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">متاح</span>
                     ) : (
                       <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-md font-medium flex items-center gap-1">
-                        <X className="w-3 h-3" /> Sold Out
+                        <X className="w-3 h-3" /> نفذ
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="w-4 h-4" /> Up to {room.capacity} guests
+                    <Users className="w-4 h-4" /> حتى {room.capacity} ضيوف
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {room.amenities.map((a) => (
@@ -110,13 +110,13 @@ const HotelDetails = () => {
                     ))}
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <span className="text-lg font-bold text-foreground">${room.price}<span className="text-sm font-normal text-muted-foreground">/night</span></span>
+                    <span className="text-lg font-bold text-foreground" dir="ltr">${room.price}<span className="text-sm font-normal text-muted-foreground">/ليلة</span></span>
                     <button
                       disabled={!room.available}
                       onClick={() => navigate(`/booking?hotel=${hotel.id}&room=${room.id}`)}
                       className="gradient-cta text-primary-foreground px-5 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      Book Now
+                      احجز الآن
                     </button>
                   </div>
                 </div>
