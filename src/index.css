@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Kufi+Arabic:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,46 +8,33 @@
   :root {
     --background: 210 20% 98%;
     --foreground: 210 11% 20%;
-
     --card: 0 0% 100%;
     --card-foreground: 210 11% 20%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 210 11% 20%;
-
     --primary: 207 65% 45%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 207 55% 70%;
     --secondary-foreground: 210 40% 15%;
-
     --muted: 210 20% 95%;
     --muted-foreground: 210 10% 50%;
-
     --accent: 213 50% 23%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 210 20% 90%;
     --input: 210 20% 90%;
     --ring: 207 65% 45%;
-
     --radius: 0.75rem;
-
     --sky: 207 65% 70%;
     --sky-foreground: 210 40% 15%;
     --navy: 213 50% 23%;
     --navy-foreground: 0 0% 100%;
-
     --gradient-primary: linear-gradient(135deg, hsl(207 65% 70%), hsl(207 65% 45%));
     --gradient-hero: linear-gradient(135deg, hsl(207 65% 70% / 0.15), hsl(213 50% 23% / 0.08));
     --gradient-cta: linear-gradient(135deg, hsl(207 65% 45%), hsl(213 50% 23%));
-
     --shadow-card: 0 4px 24px -4px hsl(207 65% 45% / 0.1);
     --shadow-elevated: 0 12px 40px -8px hsl(207 65% 45% / 0.15);
-
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
