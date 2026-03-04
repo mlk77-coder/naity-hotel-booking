@@ -203,6 +203,7 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
+    </Layout>
   );
 };
 
