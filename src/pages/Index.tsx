@@ -102,7 +102,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Hajiz connection */}
+      {/* Direct connection */}
       <section className="py-16 bg-card">
         <div className="container mx-auto px-4 text-center">
           <motion.div
@@ -113,10 +113,10 @@ const Index = () => {
           >
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium">
               <Zap className="w-4 h-4" />
-              {t("hajiz.badge")}
+              {t("direct.badge")}
             </div>
-            <h2 className="text-3xl font-bold text-foreground">{t("hajiz.title")}</h2>
-            <p className="text-muted-foreground">{t("hajiz.desc")}</p>
+            <h2 className="text-3xl font-bold text-foreground">{t("direct.title")}</h2>
+            <p className="text-muted-foreground">{t("direct.desc")}</p>
           </motion.div>
         </div>
       </section>

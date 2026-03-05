@@ -19,7 +19,7 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // Hero
   "hero.title": { ar: "اعثر على إقامتك المثالية مع", en: "Find your perfect stay with" },
-  "hero.subtitle": { ar: "احجز فنادق متصلة مباشرة بنظام حاجز لإدارة الفنادق.\nتوفر فوري. تأكيد لحظي.", en: "Book hotels connected directly to the Hajiz hotel management system.\nInstant availability. Instant confirmation." },
+  "hero.subtitle": { ar: "احجز فنادق متصلة مباشرة بأنظمة الفنادق عبر API.\nتوفر فوري. تأكيد لحظي.", en: "Book hotels connected directly via API.\nInstant availability. Instant confirmation." },
   "hero.anyCity": { ar: "أي مدينة", en: "Any City" },
   "hero.guest1": { ar: "1 ضيف", en: "1 Guest" },
   "hero.guest2": { ar: "2 ضيوف", en: "2 Guests" },
@@ -27,10 +27,10 @@ const translations: Record<string, Record<Lang, string>> = {
   "hero.guest4": { ar: "+4 ضيوف", en: "4+ Guests" },
   "hero.search": { ar: "بحث", en: "Search" },
 
-  // Hajiz section
-  "hajiz.badge": { ar: "مدعوم بنظام حاجز", en: "Powered by Hajiz" },
-  "hajiz.title": { ar: "متصل مباشرة بالفنادق", en: "Connected directly to hotels" },
-  "hajiz.desc": { ar: "كل فندق على Naity يستخدم نظام حاجز داخلياً.\nهذا يعني أنك تحصل على توفر الغرف لحظياً، أسعار مباشرة، وتأكيد حجز فوري — بدون وسطاء.", en: "Every hotel on Naity uses the Hajiz system internally.\nThis means you get real-time room availability, direct prices, and instant booking confirmation — no middlemen." },
+  // Direct connection section
+  "direct.badge": { ar: "اتصال مباشر بالفنادق", en: "Direct Hotel Connection" },
+  "direct.title": { ar: "متصل مباشرة بالفنادق", en: "Connected directly to hotels" },
+  "direct.desc": { ar: "كل فندق على Naity متصل مباشرة عبر API.\nهذا يعني أنك تحصل على توفر الغرف لحظياً، أسعار مباشرة، وتأكيد حجز فوري — بدون وسطاء.", en: "Every hotel on Naity is connected directly via API.\nThis means you get real-time room availability, direct prices, and instant booking confirmation — no middlemen." },
 
   // Featured
   "featured.title": { ar: "فنادق مميزة", en: "Featured Hotels" },
@@ -39,11 +39,11 @@ const translations: Record<string, Record<Lang, string>> = {
   // Benefits
   "benefits.title": { ar: "لماذا تحجز مع Naity؟", en: "Why book with Naity?" },
   "benefits.realtime.title": { ar: "توفر لحظي", en: "Real-time Availability" },
-  "benefits.realtime.desc": { ar: "بيانات الغرف تُجلب مباشرة من نظام حاجز الخاص بالفندق. ما تراه هو ما تحصل عليه.", en: "Room data is fetched directly from the hotel's Hajiz system. What you see is what you get." },
+  "benefits.realtime.desc": { ar: "بيانات الغرف تُجلب مباشرة من نظام الفندق عبر API. ما تراه هو ما تحصل عليه.", en: "Room data is fetched directly from the hotel's system via API. What you see is what you get." },
   "benefits.instant.title": { ar: "تأكيد فوري", en: "Instant Confirmation" },
-  "benefits.instant.desc": { ar: "حجزك يُؤكد فوراً عبر واجهة حاجز البرمجية. لا انتظار، لا شك.", en: "Your booking is confirmed instantly through the Hajiz API. No waiting, no doubt." },
+  "benefits.instant.desc": { ar: "حجزك يُؤكد فوراً عبر الاتصال المباشر بالفندق. لا انتظار، لا شك.", en: "Your booking is confirmed instantly through direct hotel connection. No waiting, no doubt." },
   "benefits.secure.title": { ar: "آمن وموثوق", en: "Secure & Trusted" },
-  "benefits.secure.desc": { ar: "حجوزات مشفرة من البداية للنهاية مع نظام موثوق تستخدمه فنادق حول العالم.", en: "End-to-end encrypted bookings with a trusted system used by hotels worldwide." },
+  "benefits.secure.desc": { ar: "حجوزات مشفرة من البداية للنهاية مع اتصال مباشر وآمن بالفنادق.", en: "End-to-end encrypted bookings with secure direct connection to hotels." },
 
   // Hotels listing
   "hotels.title": { ar: "تصفح الفنادق", en: "Browse Hotels" },
@@ -88,37 +88,37 @@ const translations: Record<string, Record<Lang, string>> = {
   "booking.upTo": { ar: "حتى", en: "Up to" },
   "booking.noRoom": { ar: "لم يتم اختيار غرفة. يرجى العودة واختيار غرفة.", en: "No room selected. Please go back and select a room." },
   "booking.confirmed": { ar: "تم تأكيد الحجز!", en: "Booking Confirmed!" },
-  "booking.confirmedDesc": { ar: "تم إرسال حجزك إلى الفندق عبر نظام حاجز. ستتلقى بريداً إلكترونياً للتأكيد قريباً.", en: "Your booking has been sent to the hotel via the Hajiz system. You will receive a confirmation email shortly." },
+  "booking.confirmedDesc": { ar: "تم إرسال حجزك إلى الفندق مباشرة. ستتلقى بريداً إلكترونياً للتأكيد قريباً.", en: "Your booking has been sent directly to the hotel. You will receive a confirmation email shortly." },
   "booking.successToast": { ar: "تم إرسال الحجز بنجاح!", en: "Booking submitted successfully!" },
 
   // How it works
   "how.title": { ar: "كيف تعمل Naity", en: "How Naity Works" },
-  "how.subtitle": { ar: "اتصال سلس بين الفنادق والمسافرين، مدعوم بنظام حاجز لإدارة الفنادق.", en: "Seamless connection between hotels and travelers, powered by the Hajiz hotel management system." },
+  "how.subtitle": { ar: "اتصال سلس بين الفنادق والمسافرين عبر واجهة برمجية مباشرة.", en: "Seamless connection between hotels and travelers through direct API integration." },
   "how.step": { ar: "الخطوة", en: "Step" },
-  "how.step1.title": { ar: "الفنادق تستخدم حاجز", en: "Hotels use Hajiz" },
-  "how.step1.desc": { ar: "تقوم الفنادق بتثبيت نظام حاجز لإدارة الغرف والتوفر والتسعير والعمليات داخلياً.", en: "Hotels install the Hajiz system to manage rooms, availability, pricing, and operations internally." },
-  "how.step2.title": { ar: "Naity تتصل عبر API", en: "Naity connects via API" },
-  "how.step2.desc": { ar: "تتصل Naity بنظام حاجز لكل فندق من خلال واجهة برمجية آمنة، وتسحب البيانات الحية لحظياً.", en: "Naity connects to each hotel's Hajiz system through a secure API, pulling live data in real-time." },
+  "how.step1.title": { ar: "الفنادق تتصل بـ Naity", en: "Hotels connect to Naity" },
+  "how.step1.desc": { ar: "تقوم الفنادق بربط أنظمتها الداخلية مع Naity عبر واجهة برمجية (API) لمشاركة بيانات الغرف والأسعار والتوفر.", en: "Hotels connect their internal systems to Naity via API to share room data, pricing, and availability." },
+  "how.step2.title": { ar: "Naity تسحب البيانات لحظياً", en: "Naity pulls live data" },
+  "how.step2.desc": { ar: "تتصل Naity بنظام كل فندق من خلال واجهة برمجية آمنة، وتسحب البيانات الحية لحظياً.", en: "Naity connects to each hotel's system through a secure API, pulling live data in real-time." },
   "how.step3.title": { ar: "أنت تتصفح وتحجز", en: "You browse & book" },
-  "how.step3.desc": { ar: "فقط الفنادق التي تعمل بنظام حاجز تظهر على Naity. تحصل على توفر حقيقي، أسعار حقيقية، وتأكيد فوري.", en: "Only hotels running Hajiz appear on Naity. You get real availability, real prices, and instant confirmation." },
+  "how.step3.desc": { ar: "تحصل على توفر حقيقي، أسعار حقيقية، وتأكيد فوري — بدون وسطاء.", en: "You get real availability, real prices, and instant confirmation — no middlemen." },
   "how.result": { ar: "النتيجة", en: "The Result" },
   "how.result1": { ar: "لا قوائم قديمة — البيانات تأتي مباشرة من الفنادق", en: "No stale listings — data comes directly from hotels" },
   "how.result2": { ar: "لا حجوزات مزدوجة — التوفر متزامن لحظياً", en: "No double bookings — availability syncs in real-time" },
   "how.result3": { ar: "لا رسوم مخفية — الأسعار يحددها الفندق مباشرة", en: "No hidden fees — prices are set directly by the hotel" },
-  "how.result4": { ar: "تأكيد فوري — الحجوزات تذهب مباشرة إلى حاجز", en: "Instant confirmation — bookings go directly to Hajiz" },
+  "how.result4": { ar: "تأكيد فوري — الحجوزات تذهب مباشرة إلى الفندق", en: "Instant confirmation — bookings go directly to the hotel" },
 
   // About
   "about.title": { ar: "عن Naity", en: "About Naity" },
-  "about.subtitle": { ar: "تحديث حجز الفنادق من خلال الاتصال المباشر بنظام حاجز لإدارة الفنادق.", en: "Modernizing hotel booking through direct connection to the Hajiz hotel management system." },
+  "about.subtitle": { ar: "تحديث حجز الفنادق من خلال الاتصال المباشر بأنظمة الفنادق.", en: "Modernizing hotel booking through direct connection to hotel systems." },
   "about.mission": { ar: "مهمتنا", en: "Our Mission" },
-  "about.missionDesc": { ar: "سد الفجوة بين الفنادق والمسافرين من خلال توفير تجربة حجز سلسة. عبر منظومة حاجز + Naity، نضمن أن كل حجز دقيق وفوري وموثوق.", en: "Bridging the gap between hotels and travelers through a seamless booking experience. Through the Hajiz + Naity ecosystem, we ensure every booking is accurate, instant, and reliable." },
+  "about.missionDesc": { ar: "سد الفجوة بين الفنادق والمسافرين من خلال توفير تجربة حجز سلسة. عبر الاتصال المباشر بأنظمة الفنادق، نضمن أن كل حجز دقيق وفوري وموثوق.", en: "Bridging the gap between hotels and travelers through a seamless booking experience. Through direct API connection to hotel systems, we ensure every booking is accurate, instant, and reliable." },
   "about.vision": { ar: "رؤيتنا", en: "Our Vision" },
-  "about.visionDesc": { ar: "عالم يستخدم فيه كل فندق، من البوتيك إلى السلسلة الفاخرة، نظام حاجز للعمليات وNaity للتوزيع — لخلق سوق حجز موثوق وشفاف.", en: "A world where every hotel, from boutique to luxury chain, uses Hajiz for operations and Naity for distribution — creating a reliable and transparent booking marketplace." },
+  "about.visionDesc": { ar: "عالم يتصل فيه كل فندق، من البوتيك إلى السلسلة الفاخرة، مباشرة بـ Naity — لخلق سوق حجز موثوق وشفاف.", en: "A world where every hotel, from boutique to luxury chain, connects directly to Naity — creating a reliable and transparent booking marketplace." },
   "about.values": { ar: "قيمنا", en: "Our Values" },
   "about.transparency": { ar: "الشفافية", en: "Transparency" },
   "about.transparencyDesc": { ar: "ما تراه هو ما تحصل عليه. أسعار حقيقية، توفر حقيقي.", en: "What you see is what you get. Real prices, real availability." },
   "about.reliability": { ar: "الموثوقية", en: "Reliability" },
-  "about.reliabilityDesc": { ar: "كل حجز يمر عبر حاجز لتأكيد فوري ومضمون.", en: "Every booking goes through Hajiz for instant, guaranteed confirmation." },
+  "about.reliabilityDesc": { ar: "كل حجز يُرسل مباشرة إلى الفندق لتأكيد فوري ومضمون.", en: "Every booking goes directly to the hotel for instant, guaranteed confirmation." },
   "about.innovation": { ar: "الابتكار", en: "Innovation" },
   "about.innovationDesc": { ar: "تحسين مستمر لتجربة الفندق والضيف من خلال التكنولوجيا.", en: "Continuously improving the hotel and guest experience through technology." },
 
@@ -138,18 +138,18 @@ const translations: Record<string, Record<Lang, string>> = {
   "contact.officeLabel": { ar: "المكتب", en: "Office" },
   "contact.office": { ar: "دبي، الإمارات", en: "Dubai, UAE" },
   "contact.hotelCta": { ar: "هل أنت فندق؟", en: "Are you a hotel?" },
-  "contact.hotelCtaDesc": { ar: "انضم إلى منظومة حاجز واحصل على إدراج فندقك في Naity. أدر عملياتك واستقطب المزيد من الضيوف.", en: "Join the Hajiz ecosystem and get your hotel listed on Naity. Manage your operations and attract more guests." },
-  "contact.learnHajiz": { ar: "تعرّف على حاجز", en: "Learn about Hajiz" },
+  "contact.hotelCtaDesc": { ar: "اربط نظام فندقك بـ Naity واستقطب المزيد من الضيوف عبر اتصال API مباشر.", en: "Connect your hotel system to Naity and attract more guests through direct API integration." },
+  "contact.learnMore": { ar: "تعرّف على المزيد", en: "Learn More" },
   "contact.successToast": { ar: "تم إرسال الرسالة! سنرد عليك قريباً.", en: "Message sent! We'll get back to you soon." },
 
   // Footer
-  "footer.desc": { ar: "منصتك الموثوقة لحجز الفنادق. متصلة مباشرة بالفنادق التي تعمل بنظام حاجز.", en: "Your trusted hotel booking platform. Connected directly to hotels powered by Hajiz." },
+  "footer.desc": { ar: "منصتك الموثوقة لحجز الفنادق. متصلة مباشرة بأنظمة الفنادق عبر API.", en: "Your trusted hotel booking platform. Connected directly to hotel systems via API." },
   "footer.explore": { ar: "استكشف", en: "Explore" },
   "footer.support": { ar: "الدعم", en: "Support" },
   "footer.forHotels": { ar: "للفنادق", en: "For Hotels" },
-  "footer.forHotelsDesc": { ar: "استخدم نظام حاجز لإدارة فندقك والظهور على Naity.", en: "Use the Hajiz system to manage your hotel and appear on Naity." },
-  "footer.joinHajiz": { ar: "انضم إلى حاجز", en: "Join Hajiz" },
-  "footer.copyright": { ar: "جميع الحقوق محفوظة. مدعوم بنظام حاجز.", en: "All rights reserved. Powered by Hajiz." },
+  "footer.forHotelsDesc": { ar: "اربط نظام فندقك بـ Naity للظهور على المنصة.", en: "Connect your hotel system to Naity to appear on the platform." },
+  "footer.joinNaity": { ar: "انضم إلى Naity", en: "Join Naity" },
+  "footer.copyright": { ar: "جميع الحقوق محفوظة.", en: "All rights reserved." },
 
   // App download
   "app.download": { ar: "حمّل التطبيق", en: "Download the App" },

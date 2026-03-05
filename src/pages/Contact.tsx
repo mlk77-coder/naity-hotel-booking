@@ -110,7 +110,7 @@ const Contact = () => {
                 <h3 className="font-bold text-lg">{t("contact.hotelCta")}</h3>
                 <p className="text-sm text-accent-foreground/80">{t("contact.hotelCtaDesc")}</p>
                 <button className="bg-primary text-primary-foreground px-5 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
-                  {t("contact.learnHajiz")}
+                  {t("contact.learnMore")}
                 </button>
               </motion.div>
             </div>
