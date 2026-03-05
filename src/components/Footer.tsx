@@ -42,7 +42,7 @@ const Footer = () => {
               to="/contact"
               className="inline-block px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
             >
-              {t("footer.joinHajiz")}
+              {t("footer.joinNaity")}
             </Link>
           </div>
         </div>
