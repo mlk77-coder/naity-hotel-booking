@@ -21,7 +21,7 @@ const AdminHotels = () => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
-  const [galleryHotel, setGalleryHotel] = useState<Tables<"hotels"> | null>(null);
+  
   const [form, setForm] = useState<Partial<TablesInsert<"hotels">>>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
     contact_phone: "", contact_email: "",
