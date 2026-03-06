@@ -24,7 +24,6 @@ const syncColors: Record<string, string> = {
 
 const AdminBookings = () => {
   const { lang } = useI18n();
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -42,17 +41,6 @@ const AdminBookings = () => {
       const { data, error } = await q;
       if (error) throw error;
       return data;
-    },
-  });
-
-  const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
-      toast.success(lang === "ar" ? "تم تحديث الحالة" : "Status updated");
     },
   });
 
