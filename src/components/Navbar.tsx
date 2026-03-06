@@ -100,9 +100,15 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-          </div>
-        </div>
-      )}
+            {user ? (
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1">
+                <LayoutDashboard className="w-4 h-4" /> {lang === "ar" ? "لوحة التحكم" : "Dashboard"}
+              </Link>
+            ) : (
+              <Link to="/login" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1">
+                <LogIn className="w-4 h-4" /> {lang === "ar" ? "تسجيل الدخول" : "Login"}
+              </Link>
+            )}
     </nav>
   );
 };
