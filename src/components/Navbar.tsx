@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, Globe } from "lucide-react";
+import { Menu, X, Globe, LogIn, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import naityLogo from "@/assets/naity-logo.png";
 import { useI18n } from "@/lib/i18n";
 
@@ -8,6 +9,7 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { t, lang, setLang } = useI18n();
+  const { user, role } = useAuth();
 
   const navLinks = [
     { to: "/", label: t("nav.home") },
@@ -46,6 +48,23 @@ const Navbar = () => {
             <Globe className="w-4 h-4" />
             {lang === "ar" ? "EN" : "عربي"}
           </button>
+          {user ? (
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium gradient-cta text-primary-foreground ms-1"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              {lang === "ar" ? "لوحة التحكم" : "Dashboard"}
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium gradient-cta text-primary-foreground ms-1"
+            >
+              <LogIn className="w-4 h-4" />
+              {lang === "ar" ? "تسجيل الدخول" : "Login"}
+            </Link>
+          )}
         </div>
 
         <div className="md:hidden flex items-center gap-1">
@@ -81,6 +100,15 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            {user ? (
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1">
+                <LayoutDashboard className="w-4 h-4" /> {lang === "ar" ? "لوحة التحكم" : "Dashboard"}
+              </Link>
+            ) : (
+              <Link to="/login" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1">
+                <LogIn className="w-4 h-4" /> {lang === "ar" ? "تسجيل الدخول" : "Login"}
+              </Link>
+            )}
           </div>
         </div>
       )}
