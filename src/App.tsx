@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminHotels from "./pages/admin/AdminHotels";
+import AdminHotelDetail from "./pages/admin/AdminHotelDetail";
 import AdminRooms from "./pages/admin/AdminRooms";
 import AdminManagers from "./pages/admin/AdminManagers";
 import AdminBookings from "./pages/admin/AdminBookings";
