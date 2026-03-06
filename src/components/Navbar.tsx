@@ -48,6 +48,23 @@ const Navbar = () => {
             <Globe className="w-4 h-4" />
             {lang === "ar" ? "EN" : "عربي"}
           </button>
+          {user ? (
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium gradient-cta text-primary-foreground ms-1"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              {lang === "ar" ? "لوحة التحكم" : "Dashboard"}
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium gradient-cta text-primary-foreground ms-1"
+            >
+              <LogIn className="w-4 h-4" />
+              {lang === "ar" ? "تسجيل الدخول" : "Login"}
+            </Link>
+          )}
         </div>
 
         <div className="md:hidden flex items-center gap-1">
