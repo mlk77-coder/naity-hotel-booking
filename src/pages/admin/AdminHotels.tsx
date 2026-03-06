@@ -159,18 +159,6 @@ const AdminHotels = () => {
           </Dialog>
         </div>
 
-        {/* Gallery Modal */}
-        <Dialog open={!!galleryHotel} onOpenChange={(v) => { if (!v) setGalleryHotel(null); }}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {lang === "ar" ? "معرض الصور — " : "Gallery — "}
-                {galleryHotel && (lang === "ar" ? galleryHotel.name_ar : galleryHotel.name_en)}
-              </DialogTitle>
-            </DialogHeader>
-            {galleryHotel && <GalleryManager hotelId={galleryHotel.id} />}
-          </DialogContent>
-        </Dialog>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
