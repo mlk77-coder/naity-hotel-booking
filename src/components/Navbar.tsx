@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, Globe } from "lucide-react";
+import { Menu, X, Globe, LogIn, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import naityLogo from "@/assets/naity-logo.png";
 import { useI18n } from "@/lib/i18n";
 
