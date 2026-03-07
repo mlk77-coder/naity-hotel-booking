@@ -1,17 +1,54 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Star, MapPin, Users, Check, X } from "lucide-react";
-import { hotels, getRooms } from "@/lib/mockData";
+import { Star, MapPin, Users, Check, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
-import { useI18n, useLocalizedHotelData } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const DEPOSIT_PERCENT = 30;
 
 const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const hotel = hotels.find((h) => h.id === Number(id));
-  const rooms = hotel ? getRooms(hotel.id) : [];
-  const { t } = useI18n();
-  const { localizeHotelName, localizeHotelDesc, localizeAmenity, localizeCity, localizeRoomType, localizeRoomAmenity } = useLocalizedHotelData();
+  const { t, lang } = useI18n();
+  const [hotel, setHotel] = useState<any>(null);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [galleryIdx, setGalleryIdx] = useState(0);
+
+  const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
+
+  useEffect(() => {
+    if (!id) return;
+    const load = async () => {
+      setLoading(true);
+      const [hotelRes, photosRes, roomsRes] = await Promise.all([
+        supabase.from("hotels").select("*").eq("id", id).eq("is_active", true).single(),
+        supabase.from("hotel_photos").select("*").eq("hotel_id", id).order("sort_order"),
+        supabase.from("room_categories").select("*").eq("hotel_id", id).eq("is_active", true).order("price_per_night"),
+      ]);
+      setHotel(hotelRes.data);
+      setPhotos(photosRes.data || []);
+      setRooms(roomsRes.data || []);
+      setLoading(false);
+    };
+    load();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-10 space-y-6">
+          <Skeleton className="h-96 w-full rounded-xl" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-full max-w-lg" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!hotel) {
     return (
@@ -23,13 +60,41 @@ const HotelDetails = () => {
     );
   }
 
-  const name = localizeHotelName(hotel.id, hotel.name);
+  const name = lang === "ar" ? hotel.name_ar : hotel.name_en;
+  const description = lang === "ar" ? hotel.description_ar : hotel.description_en;
+  const allImages = photos.length > 0 ? photos.map((p: any) => p.url) : (hotel.cover_image ? [hotel.cover_image] : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"]);
+  const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
+  const minPrice = rooms.length > 0 ? Math.min(...rooms.map((r: any) => r.price_per_night)) : null;
 
   return (
     <Layout>
-      <div className="relative h-64 md:h-96 overflow-hidden">
-        <img src={hotel.image} alt={name} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-accent/80 to-transparent" />
+      {/* Back button */}
+      <div className="container mx-auto px-4 pt-4">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <BackArrow className="w-4 h-4" />
+          {tx("رجوع", "Back")}
+        </button>
+      </div>
+
+      {/* Gallery */}
+      <div className="relative h-72 md:h-[28rem] overflow-hidden mt-2">
+        <img src={allImages[galleryIdx]} alt={name} className="w-full h-full object-cover transition-all duration-500" />
+        {allImages.length > 1 && (
+          <>
+            <button onClick={() => setGalleryIdx((galleryIdx - 1 + allImages.length) % allImages.length)} className="absolute left-3 top-1/2 -translate-y-1/2 bg-card/80 backdrop-blur-sm p-2 rounded-full hover:bg-card transition">
+              <ChevronLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <button onClick={() => setGalleryIdx((galleryIdx + 1) % allImages.length)} className="absolute right-3 top-1/2 -translate-y-1/2 bg-card/80 backdrop-blur-sm p-2 rounded-full hover:bg-card transition">
+              <ChevronRight className="w-5 h-5 text-foreground" />
+            </button>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {allImages.map((_: any, i: number) => (
+                <button key={i} onClick={() => setGalleryIdx(i)} className={`w-2.5 h-2.5 rounded-full transition ${i === galleryIdx ? "bg-primary" : "bg-card/60"}`} />
+              ))}
+            </div>
+          </>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-accent/70 to-transparent pointer-events-none" />
         <div className="absolute bottom-6 left-0 right-0 container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center gap-1 mb-2">
@@ -39,90 +104,129 @@ const HotelDetails = () => {
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-accent-foreground">{name}</h1>
             <div className="flex items-center gap-2 text-accent-foreground/80 mt-1">
-              <MapPin className="w-4 h-4" /> {localizeCity(hotel.city)}
+              <MapPin className="w-4 h-4" /> {hotel.city}
             </div>
           </motion.div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-10 space-y-10">
-        <div className="flex flex-wrap gap-4">
-          <div className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold text-lg">
-            {hotel.rating} / 5
-          </div>
-          <div className="text-muted-foreground flex items-center gap-1">
-            {hotel.reviewCount} {t("hotel.reviews")}
-          </div>
-          <div className="ms-auto text-2xl font-bold text-foreground" dir="ltr">
-            From ${hotel.pricePerNight}
-            <span className="text-sm font-normal text-muted-foreground">{t("hotel.perNight")}</span>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold text-foreground mb-3">{t("hotel.about")}</h2>
-          <p className="text-muted-foreground leading-relaxed">{localizeHotelDesc(hotel.id, hotel.description)}</p>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold text-foreground mb-3">{t("hotel.amenities")}</h2>
-          <div className="flex flex-wrap gap-2">
-            {hotel.amenities.map((a) => (
-              <span key={a} className="bg-muted text-muted-foreground px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-primary" /> {localizeAmenity(a)}
-              </span>
+      {/* Thumbnail strip */}
+      {allImages.length > 1 && (
+        <div className="container mx-auto px-4 -mt-6 relative z-10">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {allImages.map((img: string, i: number) => (
+              <button key={i} onClick={() => setGalleryIdx(i)} className={`shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition ${i === galleryIdx ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"}`}>
+                <img src={img} alt="" className="w-full h-full object-cover" />
+              </button>
             ))}
           </div>
         </div>
+      )}
 
+      <div className="container mx-auto px-4 py-10 space-y-10">
+        {/* Price header */}
+        {minPrice && (
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="ms-auto text-2xl font-bold text-foreground" dir="ltr">
+              {tx("من", "From")} ${minPrice}
+              <span className="text-sm font-normal text-muted-foreground">{t("hotel.perNight")}</span>
+            </div>
+          </div>
+        )}
+
+        {/* About */}
+        {description && (
+          <div>
+            <h2 className="text-xl font-bold text-foreground mb-3">{t("hotel.about")}</h2>
+            <p className="text-muted-foreground leading-relaxed">{description}</p>
+          </div>
+        )}
+
+        {/* Amenities */}
+        {hotel.amenities && hotel.amenities.length > 0 && (
+          <div>
+            <h2 className="text-xl font-bold text-foreground mb-3">{t("hotel.amenities")}</h2>
+            <div className="flex flex-wrap gap-2">
+              {hotel.amenities.map((a: string) => (
+                <span key={a} className="bg-muted text-muted-foreground px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5 text-primary" /> {a}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Room Categories with Pricing Table */}
         <div>
           <h2 className="text-xl font-bold text-foreground mb-4">{t("hotel.rooms")}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {rooms.map((room, i) => (
-              <motion.div
-                key={room.id}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card rounded-xl overflow-hidden shadow-card border border-border/50"
-              >
-                <img src={room.image} alt={localizeRoomType(room.type)} className="w-full h-40 object-cover" />
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-foreground">{localizeRoomType(room.type)}</h3>
-                    {room.available ? (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">{t("hotel.available")}</span>
-                    ) : (
-                      <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-md font-medium flex items-center gap-1">
-                        <X className="w-3 h-3" /> {t("hotel.soldOut")}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="w-4 h-4" /> {t("hotel.upTo")} {room.capacity} {t("hotel.guests")}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {room.amenities.map((a) => (
-                      <span key={a} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                        {localizeRoomAmenity(a)}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <span className="text-lg font-bold text-foreground" dir="ltr">${room.price}<span className="text-sm font-normal text-muted-foreground">{t("hotel.perNight")}</span></span>
-                    <button
-                      disabled={!room.available}
-                      onClick={() => navigate(`/booking?hotel=${hotel.id}&room=${room.id}`)}
-                      className="gradient-cta text-primary-foreground px-5 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {t("hotel.bookNow")}
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {rooms.length === 0 ? (
+            <p className="text-muted-foreground">{tx("لا توجد غرف متاحة حالياً", "No rooms available at the moment")}</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {rooms.map((room: any, i: number) => {
+                const roomName = lang === "ar" ? room.name_ar : room.name_en;
+                const deposit = Math.round(room.price_per_night * DEPOSIT_PERCENT / 100);
+                const balance = room.price_per_night - deposit;
+                return (
+                  <motion.div
+                    key={room.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-card rounded-xl overflow-hidden shadow-card border border-border/50"
+                  >
+                    <div className="p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-foreground text-lg">{roomName}</h3>
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">{t("hotel.available")}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="w-4 h-4" /> {t("hotel.upTo")} {room.max_guests} {t("hotel.guests")}
+                      </div>
+
+                      {room.amenities && room.amenities.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {room.amenities.map((a: string) => (
+                            <span key={a} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">{a}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Pricing Breakdown Table */}
+                      <div className="bg-muted/50 rounded-lg p-3 space-y-2 border border-border/30">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {tx("تفاصيل التسعير", "Pricing Breakdown")}
+                        </h4>
+                        <div className="space-y-1.5 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{tx("السعر الإجمالي / ليلة", "Total Price / Night")}</span>
+                            <span className="font-semibold text-foreground" dir="ltr">${room.price_per_night}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{tx(`العربون المطلوب (${DEPOSIT_PERCENT}%)`, `Required Deposit (${DEPOSIT_PERCENT}%)`)}</span>
+                            <span className="font-semibold text-primary" dir="ltr">${deposit}</span>
+                          </div>
+                          <div className="flex justify-between border-t border-border/50 pt-1.5">
+                            <span className="text-muted-foreground">{tx("الباقي عند الوصول", "Balance Due at Check-in")}</span>
+                            <span className="font-medium text-foreground" dir="ltr">${balance}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => navigate(`/booking?hotel=${hotel.id}&room=${room.id}`)}
+                        className="w-full gradient-cta text-primary-foreground py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+                      >
+                        {t("hotel.bookNow")}
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </Layout>

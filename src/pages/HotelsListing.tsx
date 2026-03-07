@@ -1,19 +1,57 @@
-import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { SlidersHorizontal } from "lucide-react";
-import { hotels, cities } from "@/lib/mockData";
-import HotelCard from "@/components/HotelCard";
+import { SlidersHorizontal, Star, MapPin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
-import { useI18n, useLocalizedHotelData } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 
 const HotelsListing = () => {
   const [searchParams] = useSearchParams();
   const [city, setCity] = useState(searchParams.get("city") || "");
   const [minStars, setMinStars] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(500);
-  const { t } = useI18n();
-  const { localizeCity } = useLocalizedHotelData();
+  const [maxPrice, setMaxPrice] = useState(1000);
+  const { t, lang } = useI18n();
+  const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
+
+  const [hotels, setHotels] = useState<any[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [minPrices, setMinPrices] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: hotelsData } = await supabase
+        .from("hotels")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (hotelsData) {
+        setHotels(hotelsData);
+        const uniqueCities = [...new Set(hotelsData.map((h: any) => h.city))];
+        setCities(uniqueCities);
+
+        // Fetch min prices per hotel
+        const { data: roomsData } = await supabase
+          .from("room_categories")
+          .select("hotel_id, price_per_night")
+          .eq("is_active", true);
+        
+        if (roomsData) {
+          const prices: Record<string, number> = {};
+          roomsData.forEach((r: any) => {
+            if (!prices[r.hotel_id] || r.price_per_night < prices[r.hotel_id]) {
+              prices[r.hotel_id] = r.price_per_night;
+            }
+          });
+          setMinPrices(prices);
+        }
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
 
   const filtered = useMemo(
     () =>
@@ -21,9 +59,9 @@ const HotelsListing = () => {
         (h) =>
           (!city || h.city === city) &&
           h.stars >= minStars &&
-          h.pricePerNight <= maxPrice
+          (minPrices[h.id] ? minPrices[h.id] <= maxPrice : true)
       ),
-    [city, minStars, maxPrice]
+    [city, minStars, maxPrice, hotels, minPrices]
   );
 
   return (
@@ -57,7 +95,7 @@ const HotelsListing = () => {
               >
                 <option value="">{t("hotels.allCities")}</option>
                 {cities.map((c) => (
-                  <option key={c} value={c}>{localizeCity(c)}</option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
@@ -83,7 +121,7 @@ const HotelsListing = () => {
               <input
                 type="range"
                 min={50}
-                max={500}
+                max={1000}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 className="w-full accent-primary"
@@ -92,20 +130,54 @@ const HotelsListing = () => {
           </motion.aside>
 
           <div className="flex-1">
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-20 text-muted-foreground">{tx("جاري التحميل...", "Loading...")}</div>
+            ) : filtered.length === 0 ? (
               <p className="text-muted-foreground text-center py-20">{t("hotels.noResults")}</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filtered.map((hotel, i) => (
-                  <motion.div
-                    key={hotel.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                  >
-                    <HotelCard hotel={hotel} />
-                  </motion.div>
-                ))}
+                {filtered.map((hotel, i) => {
+                  const name = lang === "ar" ? hotel.name_ar : hotel.name_en;
+                  const price = minPrices[hotel.id];
+                  return (
+                    <motion.div
+                      key={hotel.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Link
+                        to={`/hotels/${hotel.id}`}
+                        className="group block rounded-xl overflow-hidden bg-card shadow-card border border-border/50 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1"
+                      >
+                        <div className="relative h-48 overflow-hidden">
+                          <img
+                            src={hotel.cover_image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"}
+                            alt={name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          {price && (
+                            <div className="absolute top-3 left-3 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold text-primary" dir="ltr">
+                              ${price}{t("hotel.perNight")}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4 space-y-2">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: hotel.stars }).map((_, i) => (
+                              <Star key={i} className="w-3.5 h-3.5 fill-primary text-primary" />
+                            ))}
+                          </div>
+                          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{name}</h3>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <MapPin className="w-3.5 h-3.5" />
+                            {hotel.city}
+                          </div>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </div>
