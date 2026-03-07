@@ -77,16 +77,6 @@ const AdminHotels = () => {
     },
   });
 
-  const toggleFeatured = useMutation({
-    mutationFn: async ({ id, is_featured }: { id: string; is_featured: boolean }) => {
-      const { error } = await supabase.from("hotels").update({ is_featured } as any).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
-      toast.success(lang === "ar" ? "تم تحديث حالة التمييز" : "Featured status updated");
-    },
-  });
 
   const resetForm = () => {
     setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "" });
