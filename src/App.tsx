@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import HotelsListing from "./pages/HotelsListing";
+import SearchResults from "./pages/SearchResults";
 import HotelDetails from "./pages/HotelDetails";
 import BookingForm from "./pages/BookingForm";
 import HowItWorks from "./pages/HowItWorks";
