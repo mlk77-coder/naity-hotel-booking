@@ -261,5 +261,21 @@ export const useLocalizedHotelData = () => {
 
   const localizeAmenity = (amenity: string) => amenitiesMap[amenity] || amenity;
 
-  return { lang, hotelNames, hotelDescriptions, localizeAmenity };
+  const cityMap: Record<string, string> = lang === "en" ? {} : {
+    "Dubai": "دبي", "Istanbul": "إسطنبول", "Riyadh": "الرياض",
+    "Marrakech": "مراكش", "Casablanca": "الدار البيضاء", "Amman": "عمّان",
+    "Damascus": "دمشق", "Aleppo": "حلب", "Lattakia": "اللاذقية",
+    "Homs": "حمص", "Tartus": "طرطوس",
+  };
+
+  const localizeHotelName = (id: number, fallback: string) => {
+    return hotelNames[id]?.[lang] || fallback;
+  };
+
+  const localizeCity = (city: string) => {
+    if (lang === "ar") return cityMap[city] || city;
+    return city;
+  };
+
+  return { lang, hotelNames, hotelDescriptions, localizeAmenity, localizeHotelName, localizeCity };
 };
