@@ -184,17 +184,12 @@ export default function MyBookings() {
     }
     setLoading(true); setBookings(null);
     try {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select(`id, check_in, check_out, total_price, deposit_amount,
-                 status, payment_status, transaction_hash, special_requests,
-                 guest_first_name, guest_last_name, guest_phone, created_at,
-                 hotels ( name_ar, name_en, city, address, cover_image, stars ),
-                 room_categories ( name_ar, name_en )`)
-        .eq("guest_email", trimmed)
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.functions.invoke("get-bookings-by-email", {
+        body: { email: trimmed },
+      });
       if (error) throw error;
-      setBookings(data ?? []);
+      const bookingsData = data?.bookings ?? [];
+      setBookings(bookingsData);
     } catch (err: any) {
       toast.error(err.message ?? tx("حدث خطأ", "An error occurred"));
     } finally { setLoading(false); }
