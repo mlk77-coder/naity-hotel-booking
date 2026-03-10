@@ -16,7 +16,7 @@ const Index = () => (
     <PopularDestinations />
     <FeaturedHotels />
     <HotelCategories />
-    <WhyBookSection />
+    
     <CustomerReviews />
     <HowItWorksSection />
     <MobileAppSection />
