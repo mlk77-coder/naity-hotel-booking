@@ -110,6 +110,48 @@ export type Database = {
           },
         ]
       }
+      contact_messages: {
+        Row: {
+          country: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_read: boolean
+          is_starred: boolean
+          message: string
+          phone: string
+          replied_at: string | null
+          subject: string
+        }
+        Insert: {
+          country: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          is_read?: boolean
+          is_starred?: boolean
+          message: string
+          phone: string
+          replied_at?: string | null
+          subject: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_read?: boolean
+          is_starred?: boolean
+          message?: string
+          phone?: string
+          replied_at?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       hotel_photos: {
         Row: {
           caption: string | null

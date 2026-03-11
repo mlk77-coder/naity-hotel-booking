@@ -27,6 +27,7 @@ import AdminRooms from "./pages/admin/AdminRooms";
 import AdminManagers from "./pages/admin/AdminManagers";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminSync from "./pages/admin/AdminSync";
+import AdminMessages from "./pages/admin/AdminMessages";
 import HotelPanel from "./pages/hotel/HotelPanel";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/admin/managers" element={<ProtectedRoute requiredRole="admin"><AdminManagers /></ProtectedRoute>} />
               <Route path="/admin/bookings" element={<ProtectedRoute requiredRole="admin"><AdminBookings /></ProtectedRoute>} />
               <Route path="/admin/sync" element={<ProtectedRoute requiredRole="admin"><AdminSync /></ProtectedRoute>} />
+              <Route path="/admin/messages" element={<ProtectedRoute requiredRole="admin"><AdminMessages /></ProtectedRoute>} />
 
               {/* Hotel Manager */}
               <Route path="/hotel-panel" element={<ProtectedRoute requiredRole="hotel_manager"><HotelPanel /></ProtectedRoute>} />

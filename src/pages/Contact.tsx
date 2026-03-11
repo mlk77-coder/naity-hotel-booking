@@ -1,21 +1,112 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Building2 } from "lucide-react";
+import {
+  Mail, Phone, MapPin, Building2, Send,
+  Globe, User, MessageSquare, Tag
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
-const Contact = () => {
-  const { t } = useI18n();
+const COUNTRIES = [
+  { value: "Syria", ar: "سوريا", flag: "🇸🇾" },
+  { value: "Turkey", ar: "تركيا", flag: "🇹🇷" },
+  { value: "Germany", ar: "ألمانيا", flag: "🇩🇪" },
+  { value: "Sweden", ar: "السويد", flag: "🇸🇪" },
+  { value: "Norway", ar: "النرويج", flag: "🇳🇴" },
+  { value: "UAE", ar: "الإمارات", flag: "🇦🇪" },
+  { value: "Saudi Arabia", ar: "السعودية", flag: "🇸🇦" },
+  { value: "Jordan", ar: "الأردن", flag: "🇯🇴" },
+  { value: "Lebanon", ar: "لبنان", flag: "🇱🇧" },
+  { value: "Iraq", ar: "العراق", flag: "🇮🇶" },
+  { value: "Egypt", ar: "مصر", flag: "🇪🇬" },
+  { value: "France", ar: "فرنسا", flag: "🇫🇷" },
+  { value: "UK", ar: "المملكة المتحدة", flag: "🇬🇧" },
+  { value: "USA", ar: "أمريكا", flag: "🇺🇸" },
+  { value: "Netherlands", ar: "هولندا", flag: "🇳🇱" },
+  { value: "Other", ar: "أخرى", flag: "🌍" },
+];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success(t("contact.successToast"));
+const SUBJECTS = [
+  { value: "booking_issue", ar: "مشكلة في حجز", en: "Booking Issue" },
+  { value: "hotel_inquiry", ar: "استفسار عن فندق", en: "Hotel Inquiry" },
+  { value: "payment", ar: "استفسار عن الدفع", en: "Payment Question" },
+  { value: "cancellation", ar: "طلب إلغاء", en: "Cancellation Request" },
+  { value: "partnership", ar: "شراكة / إضافة فندق", en: "Partnership / Add Hotel" },
+  { value: "complaint", ar: "شكوى", en: "Complaint" },
+  { value: "suggestion", ar: "اقتراح", en: "Suggestion" },
+  { value: "other", ar: "أخرى", en: "Other" },
+];
+
+const Contact = () => {
+  const { t, lang } = useI18n();
+  const tx = (ar: string, en: string) => (lang === "ar" ? ar : en);
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!fullName.trim()) {
+      toast.error(tx("الرجاء إدخال الاسم الكامل", "Please enter your full name"));
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      toast.error(tx("الرجاء إدخال بريد إلكتروني صحيح", "Please enter a valid email"));
+      return;
+    }
+    if (!phone.trim() || phone.length < 7) {
+      toast.error(tx("الرجاء إدخال رقم هاتف صحيح", "Please enter a valid phone number"));
+      return;
+    }
+    if (!country) {
+      toast.error(tx("الرجاء اختيار الدولة", "Please select your country"));
+      return;
+    }
+    if (!subject) {
+      toast.error(tx("الرجاء اختيار موضوع الرسالة", "Please select a subject"));
+      return;
+    }
+    if (!message.trim() || message.trim().length < 10) {
+      toast.error(tx("الرجاء كتابة رسالة لا تقل عن 10 أحرف", "Message must be at least 10 characters"));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        full_name: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        country,
+        subject,
+        message: message.trim(),
+      });
+      if (error) throw error;
+
+      setSent(true);
+      toast.success(tx(
+        "تم إرسال رسالتك بنجاح! سنرد عليك خلال 24 ساعة.",
+        "Message sent! We'll get back to you within 24 hours."
+      ));
+    } catch (err: any) {
+      toast.error(err.message || tx("حدث خطأ، حاول مرة أخرى", "An error occurred, please try again"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Layout>
       <section className="py-20">
         <div className="container mx-auto px-4">
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -26,92 +117,275 @@ const Contact = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 max-w-5xl mx-auto">
-            <form
-              onSubmit={handleSubmit}
-              className="lg:col-span-3 bg-card rounded-2xl p-6 shadow-card border border-border/50 space-y-4"
+            {/* Form */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="lg:col-span-3 bg-card rounded-2xl p-6 shadow-card border border-border/50"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">{t("contact.name")}</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition"
-                    placeholder={t("contact.namePlaceholder")}
-                  />
+              {sent ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center">
+                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <Send className="w-7 h-7 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {tx("تم الإرسال بنجاح!", "Message Sent!")}
+                  </h3>
+                  <p className="text-muted-foreground text-sm max-w-sm">
+                    {tx(
+                      "شكراً لتواصلك معنا. سيرد فريقنا على بريدك الإلكتروني خلال 24 ساعة.",
+                      "Thank you for reaching out. Our team will reply to your email within 24 hours."
+                    )}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSent(false);
+                      setFullName(""); setEmail(""); setPhone("");
+                      setCountry(""); setSubject(""); setMessage("");
+                    }}
+                    className="text-sm text-primary underline underline-offset-2 hover:opacity-70 transition"
+                  >
+                    {tx("إرسال رسالة أخرى", "Send another message")}
+                  </button>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">{t("contact.email")}</label>
-                  <input
-                    type="email"
-                    required
-                    className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition"
-                    placeholder="email@example.com"
-                  />
+              ) : (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-primary" />
+                    {tx("أرسل لنا رسالة", "Send Us a Message")}
+                  </h3>
+
+                  {/* Row 1: Name + Email */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                        <User className="w-3.5 h-3.5 text-muted-foreground" />
+                        {tx("الاسم الكامل", "Full Name")} *
+                      </label>
+                      <input
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder={tx("اسمك الكامل", "Your full name")}
+                        className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                        <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                        {tx("البريد الإلكتروني", "Email")} *
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        dir="ltr"
+                        className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Phone + Country */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                        <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                        {tx("رقم الهاتف", "Phone Number")} *
+                      </label>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+963 912 345 678"
+                        dir="ltr"
+                        className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                        <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                        {tx("الدولة", "Country")} *
+                      </label>
+                      <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition cursor-pointer"
+                      >
+                        <option value="">{tx("اختر دولتك", "Select your country")}</option>
+                        {COUNTRIES.map((c) => (
+                          <option key={c.value} value={c.value}>
+                            {c.flag} {lang === "ar" ? c.ar : c.value}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Subject */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                      <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                      {tx("موضوع الرسالة", "Subject")} *
+                    </label>
+                    <select
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition cursor-pointer"
+                    >
+                      <option value="">{tx("اختر الموضوع", "Select subject")}</option>
+                      {SUBJECTS.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {lang === "ar" ? s.ar : s.en}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Message */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                      <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                      {tx("الرسالة", "Message")} *
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder={tx("اكتب رسالتك هنا بالتفصيل...", "Write your message in detail...")}
+                      className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground resize-none focus:ring-2 focus:ring-primary/30 transition"
+                    />
+                    <p className="text-xs text-muted-foreground text-end">
+                      {message.length} {tx("حرف", "chars")}
+                      {message.length < 10 && message.length > 0 && (
+                        <span className="text-red-400 ms-1">
+                          ({tx("10 على الأقل", "min 10")})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Submit */}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        {tx("جاري الإرسال...", "Sending...")}
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        {tx("إرسال الرسالة", "Send Message")}
+                      </>
+                    )}
+                  </button>
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">{t("contact.subject")}</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition"
-                  placeholder={t("contact.subjectPlaceholder")}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">{t("contact.message")}</label>
-                <textarea
-                  rows={5}
-                  required
-                  className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground resize-none focus:ring-2 focus:ring-primary/30 transition"
-                  placeholder={t("contact.messagePlaceholder")}
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity"
+              )}
+            </motion.div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-2 space-y-5">
+              {/* Contact Info */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-card rounded-2xl p-6 shadow-card border border-border/50 space-y-4"
               >
-                {t("contact.send")}
-              </button>
-            </form>
-
-            <div className="lg:col-span-2 space-y-6">
-              {[
-                { icon: Mail, label: t("contact.emailLabel"), value: "support@naity.net" },
-                { icon: Phone, label: t("contact.phoneLabel"), value: "+1 800 NAITY" },
-                { icon: MapPin, label: t("contact.officeLabel"), value: t("contact.office") },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex items-start gap-3"
-                >
-                  <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
-                    <item.icon className="w-5 h-5 text-primary-foreground" />
+                <h3 className="font-bold text-foreground">
+                  {tx("معلومات التواصل", "Contact Information")}
+                </h3>
+                {[
+                  { icon: Mail, label: tx("البريد", "Email"), value: "support@naity.net" },
+                  { icon: Phone, label: tx("الهاتف", "Phone"), value: "+963 912 345 678" },
+                  { icon: MapPin, label: tx("الموقع", "Location"), value: tx("سوريا — دمشق", "Syria — Damascus") },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
+                      <item.icon className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">{item.label}</div>
+                      <div className="font-medium text-foreground">{item.value}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">{item.label}</div>
-                    <div className="font-medium text-foreground">{item.value}</div>
-                  </div>
-                </motion.div>
-              ))}
+                ))}
+              </motion.div>
 
+              {/* Social Media */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-card rounded-2xl p-6 shadow-card border border-border/50 space-y-4"
+              >
+                <h3 className="font-bold text-foreground">
+                  {tx("تابعنا على", "Follow Us On")}
+                </h3>
+                <div className="space-y-3">
+                  {/* Facebook */}
+                  <a
+                    href="https://facebook.com/naitynet"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-muted hover:bg-muted/80 transition group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-foreground">Facebook</div>
+                      <div className="text-xs text-muted-foreground">facebook.com/naitynet</div>
+                    </div>
+                    <span className="text-muted-foreground group-hover:text-foreground transition">↗</span>
+                  </a>
+
+                  {/* Instagram */}
+                  <a
+                    href="https://instagram.com/naitynet"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-muted hover:bg-muted/80 transition group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-pink-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-foreground">Instagram</div>
+                      <div className="text-xs text-muted-foreground">instagram.com/naitynet</div>
+                    </div>
+                    <span className="text-muted-foreground group-hover:text-foreground transition">↗</span>
+                  </a>
+                </div>
+              </motion.div>
+
+              {/* Join Us CTA */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="bg-accent rounded-2xl p-6 text-accent-foreground space-y-3 mt-4"
+                className="bg-accent rounded-2xl p-6 text-accent-foreground space-y-3"
               >
                 <Building2 className="w-8 h-8" />
                 <h3 className="font-bold text-lg">{t("contact.hotelCta")}</h3>
                 <p className="text-sm text-accent-foreground/80">{t("contact.hotelCtaDesc")}</p>
-                <button className="bg-primary text-primary-foreground px-5 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
-                  {t("contact.learnMore")}
-                </button>
+                <a
+                  href="https://m.me/naitynet"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {tx("انضم إلينا", "Join Us")}
+                </a>
               </motion.div>
             </div>
           </div>
