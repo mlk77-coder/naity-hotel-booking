@@ -29,7 +29,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const SidebarContent = () => (
     <>
       <div className="p-4 border-b border-accent-foreground/10">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <img src={naityLogo} alt="Naity" className="h-8 w-auto" />
           <div>
             <span className="font-bold text-sm">Naity</span>
