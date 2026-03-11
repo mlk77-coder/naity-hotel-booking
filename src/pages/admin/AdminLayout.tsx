@@ -1,11 +1,12 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 import naityLogo from "@/assets/naity-logo.png";
 import {
   Hotel, Users, BookOpen, LogOut, LayoutDashboard, Settings,
-  Menu, X, Globe, ChevronLeft, Activity
+  Menu, X, Globe, ChevronLeft, Activity, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +15,15 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { lang, setLang, t } = useI18n();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    supabase
+      .from("contact_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("is_read", false)
+      .then(({ count }) => setUnreadCount(count ?? 0));
+  }, []);
 
   const navItems = [
     { to: "/admin", icon: LayoutDashboard, label: lang === "ar" ? "لوحة التحكم" : "Dashboard" },
@@ -21,6 +31,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { to: "/admin/rooms", icon: Settings, label: lang === "ar" ? "المخزون والغرف" : "Inventory" },
     { to: "/admin/managers", icon: Users, label: lang === "ar" ? "مدراء الفنادق" : "Managers" },
     { to: "/admin/bookings", icon: BookOpen, label: lang === "ar" ? "سجل الحجوزات" : "Reservations" },
+    { to: "/admin/messages", icon: MessageSquare, label: lang === "ar" ? "الرسائل" : "Messages", badge: unreadCount },
     { to: "/admin/sync", icon: Activity, label: lang === "ar" ? "إعدادات المزامنة" : "Sync Settings" },
   ];
 
@@ -53,6 +64,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           >
             <item.icon className="w-4 h-4" />
             {item.label}
+            {"badge" in item && (item as any).badge > 0 && (
+              <span className="ms-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                {(item as any).badge > 9 ? "9+" : (item as any).badge}
+              </span>
+            )}
           </Link>
         ))}
       </nav>

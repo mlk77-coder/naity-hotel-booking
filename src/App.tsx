@@ -27,6 +27,7 @@ import AdminRooms from "./pages/admin/AdminRooms";
 import AdminManagers from "./pages/admin/AdminManagers";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminSync from "./pages/admin/AdminSync";
+import AdminMessages from "./pages/admin/AdminMessages";
 import HotelPanel from "./pages/hotel/HotelPanel";
 
 const queryClient = new QueryClient();
