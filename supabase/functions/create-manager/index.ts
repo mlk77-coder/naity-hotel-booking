@@ -57,6 +57,14 @@ Deno.serve(async (req) => {
     }
 
     const { email, password, full_name, hotel_id } = await req.json();
+    console.log("create-manager payload:", { email, full_name, hotel_id, hasPassword: !!password });
+
+    if (!email || !password) {
+      return new Response(JSON.stringify({ error: 'Email and password are required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Create the manager user via admin API (does NOT affect caller's session)
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
