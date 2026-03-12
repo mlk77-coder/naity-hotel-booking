@@ -33,6 +33,87 @@ Deno.serve(async (req) => {
 
     const APP_URL = Deno.env.get("APP_URL") ?? "https://naity.com";
 
+    // ── Double-booking prevention ──────────────────────────
+    // For apartments: check blocked_dates AND existing confirmed bookings
+    const { data: hotel } = await supabase
+      .from("hotels")
+      .select("property_type, manual_mode")
+      .eq("id", hotel_id)
+      .single();
+
+    const isApartment = hotel?.property_type === "apartment";
+
+    if (isApartment) {
+      // Check blocked dates
+      const { data: blocked } = await supabase
+        .from("blocked_dates")
+        .select("id")
+        .eq("hotel_id", hotel_id)
+        .gte("blocked_date", check_in)
+        .lt("blocked_date", check_out)
+        .limit(1);
+
+      if (blocked && blocked.length > 0) {
+        return new Response(
+          JSON.stringify({ error: "Selected dates are not available for this apartment." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Check overlapping confirmed/active bookings for the same property + room
+    const overlapQuery = supabase
+      .from("bookings")
+      .select("id")
+      .eq("hotel_id", hotel_id)
+      .eq("room_category_id", room_category_id)
+      .in("status", ["confirmed", "active", "checked_in"])
+      .lt("check_in", check_out)
+      .gt("check_out", check_in);
+
+    // For synced hotels with a specific room_number, narrow the overlap check
+    if (body.room_number) {
+      overlapQuery.eq("room_number", body.room_number);
+    }
+
+    const { data: overlapping } = await overlapQuery.limit(1);
+
+    if (overlapping && overlapping.length > 0) {
+      // For apartments, any overlap = blocked
+      // For hotels with specific room, that room is taken
+      // For hotels without room_number (manual mode), check against total_rooms
+      if (isApartment || body.room_number) {
+        return new Response(
+          JSON.stringify({ error: "This room is already booked for the selected dates." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // For manual-mode hotels without room_number, check total capacity
+      const { data: roomCat } = await supabase
+        .from("room_categories")
+        .select("total_rooms")
+        .eq("id", room_category_id)
+        .single();
+
+      const { count: overlapCount } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("hotel_id", hotel_id)
+        .eq("room_category_id", room_category_id)
+        .in("status", ["confirmed", "active", "checked_in"])
+        .lt("check_in", check_out)
+        .gt("check_out", check_in);
+
+      if (roomCat && (overlapCount ?? 0) >= roomCat.total_rooms) {
+        return new Response(
+          JSON.stringify({ error: "No rooms available for the selected dates." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+    // ── End double-booking prevention ──────────────────────
+
     const txHash = `NTY-${Date.now().toString(36).toUpperCase()}-${
       Math.random().toString(36).substring(2, 8).toUpperCase()
     }`;

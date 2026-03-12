@@ -312,9 +312,9 @@ const HotelDetails = () => {
                     )
                   : [];
 
-                // For apartments or properties without room_availability, allow direct booking
+                // For apartments or manual-mode properties without room_availability, allow direct booking
                 const hasNoSyncRooms = hasSearched && availableRooms.length === 0 && !isDateBlocked;
-                const canDirectBook = hasNoSyncRooms && isApartment;
+                const canDirectBook = hasNoSyncRooms && (isApartment || (hotel as any).manual_mode);
 
                 return (
                   <motion.div
