@@ -47,10 +47,12 @@ const HotelsListing = () => {
 
   const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all";
 
+  const ALLOWED_CITY_NAMES = SYRIAN_CITIES.map(c => c.en);
+
   useEffect(() => {
     const load = async () => {
       const [hotelsRes, roomsRes, syncRes] = await Promise.all([
-        supabase.from("hotels").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("hotels").select("*").eq("is_active", true).in("city", ALLOWED_CITY_NAMES).order("created_at", { ascending: false }),
         supabase.from("room_categories").select("hotel_id, price_per_night").eq("is_active", true),
         supabase.from("local_sync_settings").select("hotel_id, is_active, last_heartbeat_at"),
       ]);
