@@ -54,15 +54,26 @@ const HotelDetails = () => {
       setAvailabilityLoading(true);
       setIsDateBlocked(false);
 
-      // Check blocked dates for apartments
+      // Check blocked dates for apartments/non-sync properties
       if ((hotel as any).property_type === "apartment") {
+        // Check manually blocked dates
         const { data: blocked } = await supabase
           .from("blocked_dates")
           .select("blocked_date")
           .eq("hotel_id", hotel.id)
           .gte("blocked_date", checkIn)
           .lt("blocked_date", checkOut);
-        if ((blocked?.length ?? 0) > 0) {
+
+        // Also check existing confirmed bookings for overlap
+        const { data: existingBookings } = await supabase
+          .from("bookings")
+          .select("check_in, check_out")
+          .eq("hotel_id", hotel.id)
+          .in("status", ["confirmed", "active", "checked_in"])
+          .lt("check_in", checkOut)
+          .gt("check_out", checkIn);
+
+        if ((blocked?.length ?? 0) > 0 || (existingBookings?.length ?? 0) > 0) {
           setIsDateBlocked(true);
           setAvailableRooms([]);
           setHasSearched(true);
@@ -71,6 +82,7 @@ const HotelDetails = () => {
         }
       }
 
+      // Try room_availability first (for API-synced hotels)
       const { data } = await supabase
         .from("room_availability")
         .select("*")
@@ -300,6 +312,10 @@ const HotelDetails = () => {
                     )
                   : [];
 
+                // For apartments or properties without room_availability, allow direct booking
+                const hasNoSyncRooms = hasSearched && availableRooms.length === 0 && !isDateBlocked;
+                const canDirectBook = hasNoSyncRooms && isApartment;
+
                 return (
                   <motion.div
                     key={room.id}
@@ -314,15 +330,17 @@ const HotelDetails = () => {
                         <h3 className="font-semibold text-foreground text-lg">{roomName}</h3>
                         {hasSearched ? (
                           <span className={`text-xs px-2 py-1 rounded-md font-medium ${
-                            categoryAvailable.length > 0 && !isDateBlocked
+                            (categoryAvailable.length > 0 || canDirectBook) && !isDateBlocked
                               ? "bg-primary/10 text-primary"
                               : "bg-destructive/10 text-destructive"
                           }`}>
                             {isDateBlocked
                               ? tx("محجوزة", "Blocked")
-                              : categoryAvailable.length > 0
-                                ? `${categoryAvailable.length} ${tx("متاحة", "available")}`
-                                : tx("غير متاحة", "Unavailable")}
+                              : canDirectBook
+                                ? tx("متاحة", "Available")
+                                : categoryAvailable.length > 0
+                                  ? `${categoryAvailable.length} ${tx("متاحة", "available")}`
+                                  : tx("غير متاحة", "Unavailable")}
                           </span>
                         ) : (
                           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">{t("hotel.available")}</span>
@@ -362,7 +380,7 @@ const HotelDetails = () => {
                         </div>
                       </div>
 
-                      {/* Available room numbers */}
+                      {/* Available room numbers (from API sync) */}
                       {hasSearched && categoryAvailable.length > 0 && !isDateBlocked && (
                         <div className="space-y-2">
                           <h4 className="text-xs font-semibold text-muted-foreground">
@@ -382,23 +400,21 @@ const HotelDetails = () => {
                         </div>
                       )}
 
-                      {/* Book now button (when no availability data or fallback) */}
-                      {(!hasSearched || (categoryAvailable.length === 0 && !isDateBlocked)) && (
+                      {/* Direct booking for apartments / non-sync properties */}
+                      {hasSearched && canDirectBook && (
                         <button
-                          onClick={() => {
-                            if (hasSearched && categoryAvailable.length === 0) return;
-                            const params = new URLSearchParams({ hotel: hotel.id, room: room.id });
-                            if (checkIn) params.set("check_in", checkIn);
-                            if (checkOut) params.set("check_out", checkOut);
-                            navigate(`/booking?${params.toString()}`);
-                          }}
-                          disabled={hasSearched && categoryAvailable.length === 0}
-                          className="w-full gradient-cta text-primary-foreground py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => navigate(`/booking?hotel=${hotel.id}&room=${room.id}&check_in=${checkIn}&check_out=${checkOut}`)}
+                          className="w-full gradient-cta text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
                         >
-                          {hasSearched && categoryAvailable.length === 0
-                            ? tx("غير متاحة في هذه التواريخ", "Unavailable for selected dates")
-                            : t("hotel.bookNow")}
+                          {tx("احجز الآن", "Book Now")}
                         </button>
+                      )}
+
+                      {/* Fallback: no dates selected yet */}
+                      {!hasSearched && (
+                        <p className="text-xs text-muted-foreground text-center py-1">
+                          {tx("اختر التواريخ أعلاه لعرض الغرف المتاحة", "Select dates above to check availability")}
+                        </p>
                       )}
                     </div>
                   </motion.div>

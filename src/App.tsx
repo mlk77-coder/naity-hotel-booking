@@ -14,6 +14,7 @@ import HotelDetails from "./pages/HotelDetails";
 import BookingForm from "./pages/BookingForm";
 import HowItWorks from "./pages/HowItWorks";
 import About from "./pages/About";
+import Join from "./pages/Join";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/booking" element={<BookingForm />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/about" element={<About />} />
+              <Route path="/join" element={<Join />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
               <Route path="/my-bookings" element={<MyBookings />} />
