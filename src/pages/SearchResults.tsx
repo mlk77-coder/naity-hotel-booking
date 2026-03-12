@@ -179,7 +179,7 @@ const SearchResults = () => {
           className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground border border-border/50"
         >
           <option value="">{tx("جميع المدن", "All Cities")}</option>
-          {SYRIAN_CITIES.map((c) => (
+          {SYRIAN_MAIN_CITIES.map((c) => (
             <option key={c.en} value={c.en}>{lang === "ar" ? c.ar : c.en}</option>
           ))}
         </select>
