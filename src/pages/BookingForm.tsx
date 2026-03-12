@@ -192,6 +192,7 @@ const BookingForm = () => {
           total_price: totalPrice,
           deposit_amount: depositAmount,
           special_requests: specialRequests || null,
+          room_number: roomNumberParam || null,
           hotel_name: lang === "ar" ? hotel?.name_ar : hotel?.name_en,
           room_name: lang === "ar" ? room?.name_ar : room?.name_en,
         },
