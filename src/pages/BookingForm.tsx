@@ -113,8 +113,8 @@ const BookingForm = () => {
   const [phone, setPhone] = useState("");
   const [nationality, setNationality] = useState("");
   const [guests, setGuests] = useState(1);
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkIn, setCheckIn] = useState(checkInParam);
+  const [checkOut, setCheckOut] = useState(checkOutParam);
   const [specialRequests, setSpecialRequests] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
