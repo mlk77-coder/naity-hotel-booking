@@ -43,7 +43,9 @@ const SearchResults = () => {
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const isMobile = useIsMobile();
 
-  const initialCity = searchParams.get("city") || "";
+  const ALLOWED_CITY_NAMES = SYRIAN_CITIES.map(c => c.en);
+  const rawCity = searchParams.get("city") || "";
+  const initialCity = ALLOWED_CITY_NAMES.includes(rawCity) ? rawCity : "";
 
   const [hotels, setHotels] = useState<any[]>([]);
   const [minPrices, setMinPrices] = useState<Record<string, number>>({});
