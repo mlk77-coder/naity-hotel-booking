@@ -9,11 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 
 const SYRIAN_CITIES = [
-  { en: "Damascus", ar: "دمشق" },
-  { en: "Aleppo", ar: "حلب" },
-  { en: "Lattakia", ar: "اللاذقية" },
-  { en: "Homs", ar: "حمص" },
-  { en: "Tartus", ar: "طرطوس" },
+  { en: "Damascus",  ar: "دمشق" },
+  { en: "Aleppo",    ar: "حلب" },
+  { en: "Homs",      ar: "حمص" },
+  { en: "Hama",      ar: "حماة" },
+  { en: "Lattakia",  ar: "اللاذقية" },
+  { en: "Tartus",    ar: "طرطوس" },
 ];
 
 const fadeUp = {
