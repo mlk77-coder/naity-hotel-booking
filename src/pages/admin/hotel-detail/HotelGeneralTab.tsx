@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Save, Star } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
 
 const HOTEL_AMENITY_OPTIONS = [
   { key: "wifi", label_en: "High-speed Wi-Fi", label_ar: "واي فاي عالي السرعة" },

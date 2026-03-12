@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight, Clock } from "lucide-react";
 import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
 
 const AdminHotels = () => {
   const { lang } = useI18n();
