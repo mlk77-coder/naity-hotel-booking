@@ -84,7 +84,7 @@ const HeroSection = () => {
                 <MapPin className="w-4 h-4 text-primary shrink-0" />
                 <select value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-transparent py-3 text-sm outline-none text-foreground">
                   <option value="">{tx("أي مدينة", "Any City")}</option>
-                  {SYRIAN_CITIES.map((c) => (
+                  {SYRIAN_MAIN_CITIES.map((c) => (
                     <option key={c.en} value={c.en}>{lang === "ar" ? c.ar : c.en}</option>
                   ))}
                 </select>
