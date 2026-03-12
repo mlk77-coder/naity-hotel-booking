@@ -562,6 +562,12 @@ const BookingForm = () => {
                       <span className="text-muted-foreground">{tx("الفندق", "Hotel")}</span>
                       <span className="font-medium text-foreground">{hotelName}</span>
                     </div>
+                    {roomNumberParam && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{tx("رقم الغرفة", "Room No.")}</span>
+                        <span className="font-medium text-foreground">#{roomNumberParam}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{tx("الغرفة", "Room")}</span>
                       <span className="font-medium text-foreground">{roomName}</span>
