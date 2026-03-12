@@ -76,13 +76,23 @@ Deno.serve(async (req) => {
       .update({ last_sync_at: now })
       .eq("hotel_id", hotelId);
 
-    // 5. تسجيل في webhook_logs
-    await supabase.from("webhook_logs").insert({
-      hotel_id: hotelId,
-      event_type: "rooms_sync",
-      payload: { rooms_received: rooms.length, rooms_updated: updatedCount },
-      status: "processed",
-    });
+    // 5. Log in webhook_logs + sync_history
+    await Promise.all([
+      supabase.from("webhook_logs").insert({
+        hotel_id: hotelId,
+        event_type: "rooms_sync",
+        payload: { rooms_received: rooms.length, rooms_updated: updatedCount },
+        status: "processed",
+      }),
+      supabase.from("sync_history").insert({
+        hotel_id: hotelId,
+        event_type: "inventory_sync",
+        direction: "inbound",
+        records_count: updatedCount,
+        status: "success",
+        metadata: { rooms_received: rooms.length },
+      }),
+    ]);
 
     return new Response(
       JSON.stringify({
