@@ -17,6 +17,7 @@ const Navbar = () => {
     { to: "/how-it-works", label: t("nav.howItWorks") },
     { to: "/about", label: t("nav.about") },
     { to: "/contact", label: t("nav.contact") },
+    { to: "/join", label: lang === "ar" ? "🏠 أضف عقارك" : "🏠 List Property", highlight: true },
   ];
 
   return (
