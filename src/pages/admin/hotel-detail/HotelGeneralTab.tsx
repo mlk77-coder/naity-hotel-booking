@@ -37,6 +37,15 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     contact_email: hotel.contact_email ?? "",
     property_type: (hotel as any).property_type ?? "hotel",
     amenities: (hotel.amenities as string[]) ?? [],
+    floor: (hotel as any).floor ?? "",
+    neighborhood: (hotel as any).neighborhood ?? "",
+    check_in_time: (hotel as any).check_in_time ?? "14:00",
+    check_out_time: (hotel as any).check_out_time ?? "12:00",
+    house_rules_ar: (hotel as any).house_rules_ar ?? "",
+    house_rules_en: (hotel as any).house_rules_en ?? "",
+    bedrooms: (hotel as any).bedrooms ?? 1,
+    bathrooms: (hotel as any).bathrooms ?? 1,
+    area_sqm: (hotel as any).area_sqm ?? "",
   });
 
   const toggleAmenity = (key: string) => {
