@@ -17,6 +17,7 @@ const Navbar = () => {
     { to: "/how-it-works", label: t("nav.howItWorks") },
     { to: "/about", label: t("nav.about") },
     { to: "/contact", label: t("nav.contact") },
+    { to: "/join", label: lang === "ar" ? "🏠 أضف عقارك" : "🏠 List Property", highlight: true },
   ];
 
   return (
@@ -33,9 +34,11 @@ const Navbar = () => {
               key={link.to}
               to={link.to}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === link.to
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                (link as any).highlight
+                  ? "text-primary font-semibold"
+                  : location.pathname === link.to
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
               {link.label}
