@@ -58,7 +58,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     house_rules_en: (hotel as any).house_rules_en ?? "",
     bedrooms: (hotel as any).bedrooms ?? 1,
     bathrooms: (hotel as any).bathrooms ?? 1,
-    area_sqm: (hotel as any).area_sqm ?? "",
+    area_sqm: (hotel as any).area_sqm ?? null,
     tech_partner_id: (hotel as any).tech_partner_id ?? null,
   });
 
