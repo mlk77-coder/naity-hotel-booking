@@ -212,6 +212,36 @@ export default function MyBookings() {
     toast.success(tx("تم النسخ", "Copied!"));
   };
 
+  const openCancelDialog = async (booking: any) => {
+    setCancellingBooking(booking);
+    setLoadingPolicy(true);
+    setPolicy(null);
+    try {
+      const { data } = await supabase.functions.invoke("get-cancellation-policy", {
+        body: { check_in: booking.check_in, deposit_amount: booking.deposit_amount },
+      });
+      setPolicy(data);
+    } catch { toast.error("Failed to load policy"); }
+    setLoadingPolicy(false);
+  };
+
+  const confirmCancel = async () => {
+    if (!cancellingBooking) return;
+    setCancelling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("guest-cancel-booking", {
+        body: { booking_id: cancellingBooking.id, guest_email: cancellingBooking.guest_email },
+      });
+      if (error || !data?.success) throw new Error(error?.message ?? "Failed");
+      setCancellingBooking(null);
+      toast.success(data.refunded > 0
+        ? `Booking cancelled. Refund of $${data.refunded} in 5-10 business days.`
+        : "Booking cancelled. No refund applies.");
+      handleSearch();
+    } catch (e: any) { toast.error(e.message); }
+    setCancelling(false);
+  };
+
   const upcomingBookings = bookings?.filter(b => ["confirmed", "active", "pending"].includes(b.status)) ?? [];
   const pastBookings = bookings?.filter(b => ["expired", "completed", "cancelled"].includes(b.status)) ?? [];
 
