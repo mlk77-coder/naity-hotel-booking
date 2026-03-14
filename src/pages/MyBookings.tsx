@@ -245,7 +245,7 @@ export default function MyBookings() {
   const upcomingBookings = bookings?.filter(b => ["confirmed", "active", "pending"].includes(b.status)) ?? [];
   const pastBookings = bookings?.filter(b => ["expired", "completed", "cancelled"].includes(b.status)) ?? [];
 
-  const cardProps = { lang, tx, expandedId, setExpandedId, copiedId, copy };
+  const cardProps = { lang, tx, expandedId, setExpandedId, copiedId, copy, onCancel: openCancelDialog };
 
   return (
     <Layout>
