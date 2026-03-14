@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Save, Star } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Tables } from "@/integrations/supabase/types";
 import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
 
@@ -24,6 +25,18 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
   const { lang } = useI18n();
   const queryClient = useQueryClient();
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
+
+  const { data: techPartners = [] } = useQuery({
+    queryKey: ["tech-partners-list"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("tech_partners")
+        .select("id, name, name_ar")
+        .eq("is_active", true)
+        .order("name");
+      return data ?? [];
+    },
+  });
 
   const [form, setForm] = useState({
     name_en: hotel.name_en,
@@ -46,6 +59,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     bedrooms: (hotel as any).bedrooms ?? 1,
     bathrooms: (hotel as any).bathrooms ?? 1,
     area_sqm: (hotel as any).area_sqm ?? "",
+    tech_partner_id: (hotel as any).tech_partner_id ?? "",
   });
 
   const toggleAmenity = (key: string) => {
@@ -59,7 +73,8 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("hotels").update(form as any).eq("id", hotel.id);
+      const payload = { ...form, tech_partner_id: form.tech_partner_id || null };
+      const { error } = await supabase.from("hotels").update(payload as any).eq("id", hotel.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -219,6 +234,27 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
         <div>
           <Label>Description (English)</Label>
           <Textarea rows={4} value={form.description_en} onChange={(e) => setForm(f => ({ ...f, description_en: e.target.value }))} />
+        </div>
+
+        {/* Tech Partner */}
+        <div>
+          <Label>{tx("الشريك التقني", "Tech Partner")}</Label>
+          <Select
+            value={form.tech_partner_id || "none"}
+            onValueChange={(v) => setForm(f => ({ ...f, tech_partner_id: v === "none" ? "" : v }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={tx("بدون شريك", "No partner")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{tx("بدون شريك", "No partner")}</SelectItem>
+              {techPartners.map((tp: any) => (
+                <SelectItem key={tp.id} value={tp.id}>
+                  {lang === "ar" && tp.name_ar ? tp.name_ar : tp.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
