@@ -3,7 +3,7 @@ import { Star, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useI18n, useLocalizedHotelData } from "@/lib/i18n";
 
-const HotelCard = ({ hotel }: { hotel: Hotel }) => {
+const HotelCard = ({ hotel }: { hotel: Hotel & { property_type?: string } }) => {
   const { t } = useI18n();
   const { localizeHotelName, localizeCity } = useLocalizedHotelData();
 
