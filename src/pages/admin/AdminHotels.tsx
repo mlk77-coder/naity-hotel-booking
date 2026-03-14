@@ -180,6 +180,19 @@ const AdminHotels = () => {
                   <Label>{tx("العنوان", "Address")}</Label>
                   <Input value={form.address ?? ""} onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))} />
                 </div>
+                <div>
+                  <Label>{lang === "ar" ? "نظام إدارة الفندق / الشقة" : "Property Management System"}</Label>
+                  <select
+                    value={form.tech_partner_id ?? ""}
+                    onChange={e => setForm(f => ({ ...f, tech_partner_id: e.target.value || null }))}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">{lang === "ar" ? "— بدون نظام —" : "— None / Independent —"}</option>
+                    {techPartners.map((p: any) => (
+                      <option key={p.id} value={p.id}>{lang === "ar" ? (p.name_ar || p.name) : p.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>{tx("هاتف التواصل", "Contact Phone")}</Label>

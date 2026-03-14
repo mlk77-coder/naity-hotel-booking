@@ -328,6 +328,70 @@ export default function MyBookings() {
           </AnimatePresence>
         )}
       </div>
+
+      {/* Cancel Dialog */}
+      <Dialog open={!!cancellingBooking} onOpenChange={(v) => { if (!v) setCancellingBooking(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              {tx("تأكيد إلغاء الحجز", "Confirm Cancellation")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {cancellingBooking && (
+              <div className="space-y-1 text-sm">
+                <p className="font-semibold text-foreground">
+                  {lang === "ar" ? cancellingBooking.hotels?.name_ar : cancellingBooking.hotels?.name_en}
+                </p>
+                <p className="text-muted-foreground">
+                  {cancellingBooking.check_in} → {cancellingBooking.check_out}
+                </p>
+                <p className="text-muted-foreground">
+                  {tx("العربون:", "Deposit:")} ${cancellingBooking.deposit_amount}
+                </p>
+              </div>
+            )}
+            {loadingPolicy && (
+              <div className="flex justify-center py-4">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {policy && (
+              <div className="space-y-2 bg-muted rounded-lg p-3">
+                <p className="text-sm font-semibold text-foreground">
+                  {tx("سياسة الاسترداد:", "Refund Policy:")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {lang === "ar" ? policy.policy_ar : policy.policy_en}
+                </p>
+                {policy.peak_season && (
+                  <p className="text-xs text-destructive font-medium">
+                    {tx(
+                      "🚫 موسم الذروة (15 يونيو – 15 سبتمبر): لن يتم استرداد العربون.",
+                      "🚫 Peak season (Jun 15 – Sep 15): deposit will NOT be refunded."
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-destructive">
+              {tx("هل أنت متأكد؟ لا يمكن التراجع.", "Are you sure? This cannot be undone.")}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setCancellingBooking(null)} disabled={cancelling}>
+                {tx("رجوع", "Go Back")}
+              </Button>
+              <Button variant="destructive" onClick={confirmCancel} disabled={cancelling || loadingPolicy}>
+                {cancelling
+                  ? <div className="w-4 h-4 border-2 border-destructive-foreground/30 border-t-destructive-foreground rounded-full animate-spin" />
+                  : <XCircle className="w-4 h-4" />}
+                {tx(cancelling ? "جاري الإلغاء..." : "تأكيد الإلغاء", cancelling ? "Cancelling..." : "Confirm Cancel")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

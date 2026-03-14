@@ -28,6 +28,11 @@ const HotelCard = ({ hotel }: { hotel: Hotel & { property_type?: string } }) => 
             <Star key={i} className="w-3.5 h-3.5 fill-primary text-primary" />
           ))}
         </div>
+        {(hotel as any).property_type === "apartment" && (
+          <span className="inline-block text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+            🏠 {lang === "ar" ? "شقة" : "Apt"}
+          </span>
+        )}
         <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
           {localizeHotelName(hotel.id, hotel.name)}
         </h3>
