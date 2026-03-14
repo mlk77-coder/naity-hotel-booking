@@ -31,6 +31,7 @@ import AdminSync from "./pages/admin/AdminSync";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminPartners from "./pages/admin/AdminPartners";
 import HotelPanel from "./pages/hotel/HotelPanel";
+import PartnerDashboard from "./pages/partner/PartnerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,9 @@ const App = () => (
 
               {/* Hotel Manager */}
               <Route path="/hotel-panel" element={<ProtectedRoute requiredRole="hotel_manager"><HotelPanel /></ProtectedRoute>} />
+
+              {/* Partner */}
+              <Route path="/partner" element={<PartnerDashboard />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

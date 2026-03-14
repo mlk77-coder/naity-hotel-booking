@@ -709,6 +709,7 @@ export type Database = {
     Functions: {
       expire_completed_bookings: { Args: never; Returns: undefined }
       get_manager_hotel_id: { Args: { _user_id: string }; Returns: string }
+      get_partner_hotel_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

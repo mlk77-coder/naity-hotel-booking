@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Handshake, Plus, Trash2, Pencil, Building2 } from "lucide-react";
+import { Handshake, Plus, Trash2, Pencil, Building2, UserPlus } from "lucide-react";
 
 const AdminPartners = () => {
   const { lang } = useI18n();
@@ -21,6 +21,14 @@ const AdminPartners = () => {
     name: "", name_ar: "", contact_email: "", contact_phone: "",
     commission_rate: 0, notes: "", is_active: true,
   });
+
+  // Login creation state
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginPartnerId, setLoginPartnerId] = useState<string | null>(null);
+  const [loginPartnerName, setLoginPartnerName] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [creatingLogin, setCreatingLogin] = useState(false);
 
   const resetForm = () => {
     setForm({ name: "", name_ar: "", contact_email: "", contact_phone: "", commission_rate: 0, notes: "", is_active: true });
@@ -105,6 +113,33 @@ const AdminPartners = () => {
     setOpen(true);
   };
 
+  const openLoginDialog = (p: any) => {
+    setLoginPartnerId(p.id);
+    setLoginPartnerName(lang === "ar" && p.name_ar ? p.name_ar : p.name);
+    setLoginEmail(p.contact_email ?? "");
+    setLoginPassword("");
+    setLoginOpen(true);
+  };
+
+  const handleCreateLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginPartnerId) return;
+    setCreatingLogin(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-partner", {
+        body: { email: loginEmail, password: loginPassword, partner_id: loginPartnerId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(lang === "ar" ? "تم إنشاء الحساب بنجاح" : "Account created successfully");
+      setLoginOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Error creating account");
+    } finally {
+      setCreatingLogin(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -176,6 +211,30 @@ const AdminPartners = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Create Login Dialog */}
+        <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {lang === "ar" ? `إنشاء حساب لـ ${loginPartnerName}` : `Create login for ${loginPartnerName}`}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateLogin} className="space-y-4">
+              <div>
+                <Label>{lang === "ar" ? "البريد الإلكتروني" : "Email"}</Label>
+                <Input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required className="mt-1" />
+              </div>
+              <div>
+                <Label>{lang === "ar" ? "كلمة المرور" : "Password"}</Label>
+                <Input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required minLength={8} className="mt-1" />
+              </div>
+              <Button type="submit" className="w-full gradient-cta" disabled={creatingLogin}>
+                {creatingLogin ? "..." : (lang === "ar" ? "إنشاء الحساب" : "Create Account")}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -254,6 +313,12 @@ const AdminPartners = () => {
                             className="p-2 rounded-lg hover:bg-destructive/10 transition text-muted-foreground hover:text-destructive"
                             title={lang === "ar" ? "حذف" : "Delete"}>
                             <Trash2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => openLoginDialog(p)}
+                            className="p-2 rounded-lg hover:bg-primary/10 transition text-muted-foreground hover:text-primary"
+                            title={lang === "ar" ? "إنشاء حساب" : "Create Login"}>
+                            <UserPlus className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
