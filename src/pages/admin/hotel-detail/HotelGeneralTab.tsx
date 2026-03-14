@@ -59,7 +59,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     bedrooms: (hotel as any).bedrooms ?? 1,
     bathrooms: (hotel as any).bathrooms ?? 1,
     area_sqm: (hotel as any).area_sqm ?? "",
-    tech_partner_id: (hotel as any).tech_partner_id ?? "",
+    tech_partner_id: (hotel as any).tech_partner_id ?? null,
   });
 
   const toggleAmenity = (key: string) => {
@@ -241,7 +241,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
           <Label>{tx("الشريك التقني", "Tech Partner")}</Label>
           <Select
             value={form.tech_partner_id || "none"}
-            onValueChange={(v) => setForm(f => ({ ...f, tech_partner_id: v === "none" ? "" : v }))}
+            onValueChange={(v) => setForm(f => ({ ...f, tech_partner_id: v === "none" ? null : v }))}
           >
             <SelectTrigger>
               <SelectValue placeholder={tx("بدون شريك", "No partner")} />
