@@ -50,7 +50,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     contact_email: hotel.contact_email ?? "",
     property_type: (hotel as any).property_type ?? "hotel",
     amenities: (hotel.amenities as string[]) ?? [],
-    floor: (hotel as any).floor ?? "",
+    floor: (hotel as any).floor ?? null,
     neighborhood: (hotel as any).neighborhood ?? "",
     check_in_time: (hotel as any).check_in_time ?? "14:00",
     check_out_time: (hotel as any).check_out_time ?? "12:00",
