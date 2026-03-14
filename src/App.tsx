@@ -31,6 +31,7 @@ import AdminSync from "./pages/admin/AdminSync";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminPartners from "./pages/admin/AdminPartners";
 import HotelPanel from "./pages/hotel/HotelPanel";
+import PartnerDashboard from "./pages/partner/PartnerDashboard";
 
 const queryClient = new QueryClient();
 
