@@ -234,6 +234,27 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
           <Label>Description (English)</Label>
           <Textarea rows={4} value={form.description_en} onChange={(e) => setForm(f => ({ ...f, description_en: e.target.value }))} />
         </div>
+
+        {/* Tech Partner */}
+        <div>
+          <Label>{tx("الشريك التقني", "Tech Partner")}</Label>
+          <Select
+            value={form.tech_partner_id || "none"}
+            onValueChange={(v) => setForm(f => ({ ...f, tech_partner_id: v === "none" ? "" : v }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={tx("بدون شريك", "No partner")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{tx("بدون شريك", "No partner")}</SelectItem>
+              {techPartners.map((tp: any) => (
+                <SelectItem key={tp.id} value={tp.id}>
+                  {lang === "ar" && tp.name_ar ? tp.name_ar : tp.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Amenities */}
