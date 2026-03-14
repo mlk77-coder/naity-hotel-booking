@@ -26,6 +26,18 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
   const queryClient = useQueryClient();
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
+  const { data: techPartners = [] } = useQuery({
+    queryKey: ["tech-partners-list"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("tech_partners")
+        .select("id, name, name_ar")
+        .eq("is_active", true)
+        .order("name");
+      return data ?? [];
+    },
+  });
+
   const [form, setForm] = useState({
     name_en: hotel.name_en,
     name_ar: hotel.name_ar,
@@ -47,6 +59,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     bedrooms: (hotel as any).bedrooms ?? 1,
     bathrooms: (hotel as any).bathrooms ?? 1,
     area_sqm: (hotel as any).area_sqm ?? "",
+    tech_partner_id: (hotel as any).tech_partner_id ?? "",
   });
 
   const toggleAmenity = (key: string) => {
