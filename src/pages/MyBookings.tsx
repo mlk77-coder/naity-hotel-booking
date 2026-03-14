@@ -46,7 +46,7 @@ const STATUS_CONFIG: Record<string, { ar: string; en: string; classes: string; d
   },
 };
 
-function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy }: any) {
+function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, onCancel }: any) {
   const hotel = b.hotels;
   const room = b.room_categories;
   const name = lang === "ar" ? hotel?.name_ar : hotel?.name_en;
