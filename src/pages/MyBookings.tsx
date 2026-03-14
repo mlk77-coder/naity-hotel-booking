@@ -162,6 +162,14 @@ function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, o
               </p>
               <p className="text-xs font-mono text-primary font-bold">{b.id.slice(0, 8).toUpperCase()}</p>
             </div>
+            {/* Cancel button */}
+            {["confirmed", "pending"].includes(b.status) && (
+              <button onClick={() => onCancel?.(b)}
+                className="text-sm text-destructive hover:underline flex items-center gap-1 mt-2 mx-auto">
+                <XCircle className="w-4 h-4" />
+                {lang === "ar" ? "إلغاء الحجز" : "Cancel Booking"}
+              </button>
+            )}
           </div>
         </motion.div>
       )}
