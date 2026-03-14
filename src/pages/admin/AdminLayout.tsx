@@ -33,6 +33,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { to: "/admin/bookings", icon: BookOpen, label: lang === "ar" ? "سجل الحجوزات" : "Reservations" },
     { to: "/admin/messages", icon: MessageSquare, label: lang === "ar" ? "الرسائل" : "Messages", badge: unreadCount },
     { to: "/admin/sync", icon: Activity, label: lang === "ar" ? "إعدادات المزامنة" : "Sync Settings" },
+    { to: "/admin/partners", icon: Handshake, label: lang === "ar" ? "الشركاء" : "Partners" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
