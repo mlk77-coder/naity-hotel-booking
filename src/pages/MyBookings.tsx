@@ -185,6 +185,10 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState<any[] | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [cancellingBooking, setCancellingBooking] = useState<any>(null);
+  const [policy, setPolicy] = useState<any>(null);
+  const [loadingPolicy, setLoadingPolicy] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const handleSearch = async () => {
     const trimmed = email.trim().toLowerCase();
