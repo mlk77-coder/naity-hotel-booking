@@ -50,7 +50,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     contact_email: hotel.contact_email ?? "",
     property_type: (hotel as any).property_type ?? "hotel",
     amenities: (hotel.amenities as string[]) ?? [],
-    floor: (hotel as any).floor ?? "",
+    floor: (hotel as any).floor ?? null,
     neighborhood: (hotel as any).neighborhood ?? "",
     check_in_time: (hotel as any).check_in_time ?? "14:00",
     check_out_time: (hotel as any).check_out_time ?? "12:00",
@@ -58,7 +58,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     house_rules_en: (hotel as any).house_rules_en ?? "",
     bedrooms: (hotel as any).bedrooms ?? 1,
     bathrooms: (hotel as any).bathrooms ?? 1,
-    area_sqm: (hotel as any).area_sqm ?? "",
+    area_sqm: (hotel as any).area_sqm ?? null,
     tech_partner_id: (hotel as any).tech_partner_id ?? null,
   });
 
@@ -73,7 +73,15 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      const payload = { ...form, tech_partner_id: form.tech_partner_id || null };
+      const payload = {
+        ...form,
+        tech_partner_id: form.tech_partner_id || null,
+        floor: form.floor !== "" && form.floor != null ? Number(form.floor) : null,
+        area_sqm: form.area_sqm !== "" && form.area_sqm != null ? Number(form.area_sqm) : null,
+        bedrooms: form.bedrooms !== "" && form.bedrooms != null ? Number(form.bedrooms) : null,
+        bathrooms: form.bathrooms !== "" && form.bathrooms != null ? Number(form.bathrooms) : null,
+        stars: form.stars != null ? Number(form.stars) : null,
+      };
       const { error } = await supabase.from("hotels").update(payload as any).eq("id", hotel.id);
       if (error) throw error;
     },
