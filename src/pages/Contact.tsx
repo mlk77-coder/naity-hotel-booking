@@ -350,7 +350,7 @@ const Contact = () => {
                 <div className="space-y-3">
                   {/* Facebook */}
                   <a
-                    href="https://facebook.com/naitynet"
+                    href="https://www.facebook.com/share/18NsXS2Eh2/?mibextid=wwXIfr"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 p-3 rounded-xl bg-muted hover:bg-muted/80 transition group"
@@ -362,7 +362,7 @@ const Contact = () => {
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-foreground">Facebook</div>
-                      <div className="text-xs text-muted-foreground">facebook.com/naitynet</div>
+                      <div className="text-xs text-muted-foreground">Naity</div>
                     </div>
                     <span className="text-muted-foreground group-hover:text-foreground transition">↗</span>
                   </a>
