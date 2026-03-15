@@ -11,7 +11,7 @@
 // ============================================================================
 
 // Security: Secret key to prevent unauthorized access
-define('SECRET_KEY', 'naity_sync_2026_secure_key_change_this');
+define('SECRET_KEY', 'naity_sync_rDqhMn85HXLcuiTBIaRt6vAmeKY3ClP2');
 
 // Supabase Configuration
 define('SUPABASE_URL', 'https://lfnvnxeymkhyzzsvadbp.supabase.co');

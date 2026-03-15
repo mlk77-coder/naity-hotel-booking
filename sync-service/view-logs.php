@@ -5,7 +5,7 @@
  */
 
 // Security check
-define('SECRET_KEY', 'naity_sync_2026_secure_key_change_this'); // Must match sync.php
+define('SECRET_KEY', 'naity_sync_rDqhMn85HXLcuiTBIaRt6vAmeKY3ClP2'); // Must match sync.php
 
 if (!isset($_GET['key']) || $_GET['key'] !== SECRET_KEY) {
     http_response_code(401);
