@@ -99,14 +99,14 @@ const Navbar = () => {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-border bg-card animate-fade-in">
-          <div className="container mx-auto px-4 py-3 flex flex-col gap-1">
+        <div className="md:hidden border-t border-border bg-card animate-fade-in overflow-hidden">
+          <div className="container mx-auto px-4 py-3 flex flex-col gap-1 overflow-x-hidden">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={() => setOpen(false)}
-                className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-right w-full ${
                   location.pathname === link.to
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"

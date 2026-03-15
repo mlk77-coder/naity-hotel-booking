@@ -256,7 +256,7 @@ const BookingForm = () => {
             <div key={s.key} className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition ${i <= currentStepIdx ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                 <s.icon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{s.label}</span>
+                <span>{s.label}</span>
               </div>
               {i < steps.length - 1 && <div className={`w-6 h-0.5 rounded ${i < currentStepIdx ? "bg-primary" : "bg-border"}`} />}
             </div>
