@@ -253,7 +253,7 @@ export default function MyBookings() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 pb-20 max-w-2xl space-y-8">
+      <div className="container mx-auto px-4 py-8 pb-20 max-w-2xl space-y-8 overflow-x-hidden">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
@@ -273,17 +273,17 @@ export default function MyBookings() {
           <label className="text-sm font-medium text-foreground">
             {tx("البريد الإلكتروني المستخدم في الحجز", "Email Used During Booking")}
           </label>
-          <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-2 bg-muted rounded-xl px-3 border border-border/50">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex-1 flex items-center gap-2 bg-muted rounded-xl px-3 border border-border/50 min-w-0">
               <Mail className="w-4 h-4 text-primary shrink-0" />
               <input type="email" value={email}
                 onChange={e => setEmail(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleSearch()}
                 placeholder="example@email.com"
-                className="flex-1 bg-transparent py-3 text-sm outline-none text-foreground" dir="ltr" />
+                className="flex-1 bg-transparent py-3 text-sm outline-none text-foreground min-w-0" dir="ltr" />
             </div>
             <button onClick={handleSearch} disabled={loading}
-              className="gradient-cta text-primary-foreground px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0">
+              className="gradient-cta text-primary-foreground px-5 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0 w-full sm:w-auto">
               {loading
                 ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                 : <Search className="w-4 h-4" />}
