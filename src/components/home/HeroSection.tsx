@@ -52,7 +52,7 @@ const HeroSection = () => {
         <div className="absolute top-20 right-10 w-72 h-72 bg-secondary/20 rounded-full blur-3xl" />
         <div className="absolute bottom-10 left-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
       </div>
-      <div className="container mx-auto px-4 py-20 md:py-28 relative">
+      <div className="container mx-auto px-4 py-12 md:py-28 relative">
         <motion.div className="max-w-3xl mx-auto text-center space-y-6" initial="hidden" animate="visible">
           {/* Badge */}
           <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-semibold">

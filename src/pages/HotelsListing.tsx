@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const SYRIAN_CITIES = [
   { en: "Damascus",  ar: "دمشق" },
@@ -44,6 +45,7 @@ const HotelsListing = () => {
   const [instantOnly, setInstantOnly] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<"all" | "hotel" | "apartment">("all");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all";
 
@@ -122,11 +124,11 @@ const HotelsListing = () => {
         </motion.h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
+          {/* Sidebar Filters - hidden on mobile */}
           <motion.aside
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:w-72 shrink-0 bg-card rounded-xl p-5 shadow-card border border-border/50 h-fit space-y-5"
+            className="hidden lg:block lg:w-72 shrink-0 bg-card rounded-xl p-5 shadow-card border border-border/50 h-fit space-y-5"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-foreground font-semibold">
@@ -242,6 +244,99 @@ const HotelsListing = () => {
           </motion.aside>
 
           <div className="flex-1">
+            {/* Mobile filter bar */}
+            <div className="flex items-center justify-between mb-4 lg:hidden">
+              <p className="text-sm text-muted-foreground font-medium">
+                {filtered.length} {tx("عقار", "property")}
+              </p>
+              <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
+                <SheetTrigger asChild>
+                  <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border/50 text-sm font-medium text-foreground shadow-sm">
+                    <SlidersHorizontal className="w-4 h-4 text-primary" />
+                    {tx("الفلاتر", "Filters")}
+                    {hasActiveFilters && (
+                      <span className="w-2 h-2 rounded-full bg-primary" />
+                    )}
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl">
+                  <SheetHeader>
+                    <SheetTitle className="text-start">{tx("الفلاتر", "Filters")}</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4 space-y-5">
+                    {/* Property Type */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">{tx("نوع العقار", "Property Type")}</label>
+                      <div className="flex flex-col gap-2">
+                        {[
+                          { val: "all" as const, ar: "الكل", en: "All" },
+                          { val: "hotel" as const, ar: "فندق", en: "Hotel" },
+                          { val: "apartment" as const, ar: "شقة سياحية", en: "Apartment" },
+                        ].map(opt => (
+                          <label key={opt.val} className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="mPropertyType" checked={propertyTypeFilter === opt.val} onChange={() => setPropertyTypeFilter(opt.val)} className="accent-primary w-4 h-4" />
+                            <span className="text-sm text-foreground">{lang === "ar" ? opt.ar : opt.en}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    {/* City */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">{tx("المدينة", "City")}</label>
+                      <select value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground border border-border/50">
+                        <option value="">{tx("جميع المدن", "All Cities")}</option>
+                        {SYRIAN_CITIES.map(c => (<option key={c.en} value={c.en}>{lang === "ar" ? c.ar : c.en}</option>))}
+                      </select>
+                    </div>
+                    {/* Price Range */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium text-foreground">{tx("نطاق السعر", "Price Range")}</label>
+                      <Slider value={priceRange} onValueChange={(v) => setPriceRange(v as [number, number])} min={0} max={500} step={10} className="w-full" />
+                      <div className="flex justify-between text-xs text-muted-foreground" dir="ltr"><span>${priceRange[0]}</span><span>${priceRange[1]}</span></div>
+                    </div>
+                    {/* Star Rating */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium text-foreground">{tx("تصنيف النجوم", "Star Rating")}</label>
+                      <div className="flex flex-col gap-2">
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <label key={s} className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox checked={starFilters.includes(s)} onCheckedChange={() => setStarFilters(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
+                            <div className="flex items-center gap-0.5">{Array.from({ length: s }).map((_, i) => (<Star key={i} className="w-3.5 h-3.5 fill-primary text-primary" />))}</div>
+                            <span className="text-sm text-muted-foreground">{s} {tx("نجوم", "Stars")}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Amenities */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium text-foreground">{tx("المرافق", "Amenities")}</label>
+                      <div className="flex flex-col gap-2">
+                        {AMENITY_OPTIONS.map(a => (
+                          <label key={a.key} className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox checked={amenityFilters.includes(a.key)} onCheckedChange={() => setAmenityFilters(prev => prev.includes(a.key) ? prev.filter(x => x !== a.key) : [...prev, a.key])} />
+                            <a.icon className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-foreground">{lang === "ar" ? a.label_ar : a.label_en}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Instantly Bookable */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{tx("حجز فوري", "Instantly Bookable")}</p>
+                        <p className="text-xs text-muted-foreground">{tx("الفنادق المتصلة فقط", "Only connected hotels")}</p>
+                      </div>
+                      <Switch checked={instantOnly} onCheckedChange={setInstantOnly} />
+                    </div>
+                    {hasActiveFilters && (
+                      <Button variant="outline" size="sm" onClick={clearAllFilters} className="w-full gap-2">
+                        <X className="w-3.5 h-3.5" /> {tx("مسح الكل", "Clear All")}
+                      </Button>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
             {loading ? (
               <div className="text-center py-20 text-muted-foreground">{tx("جاري التحميل...", "Loading...")}</div>
             ) : filtered.length === 0 ? (

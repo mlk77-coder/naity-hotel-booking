@@ -261,7 +261,7 @@ const SearchResults = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
         {/* Header with sort & view toggle */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
@@ -421,7 +421,7 @@ const SearchResults = () => {
       {isMobile && (
         <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
           <SheetTrigger asChild>
-            <button className="fixed bottom-6 start-1/2 -translate-x-1/2 z-50 gradient-cta text-primary-foreground px-6 py-3 rounded-full shadow-elevated flex items-center gap-2 text-sm font-medium">
+            <button className="fixed bottom-20 start-1/2 -translate-x-1/2 z-50 gradient-cta text-primary-foreground px-6 py-3 rounded-full shadow-elevated flex items-center gap-2 text-sm font-medium">
               <SlidersHorizontal className="w-4 h-4" />
               {tx("الفلاتر", "Filters")}
               {hasActiveFilters && (
