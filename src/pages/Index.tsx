@@ -18,7 +18,7 @@ const Index = () => {
     <Layout>
       <HeroSection />
       <PopularDestinations />
-      <FeaturedHotels />
+      {/* <FeaturedHotels /> */}
 
       {/* Join Naity CTA Banner */}
       <section className="py-14 bg-gradient-to-br from-primary/5 via-background to-blue-500/5">
@@ -48,7 +48,7 @@ const Index = () => {
       </section>
 
       <WhyBookSection />
-      <CustomerReviews />
+      {/* <CustomerReviews /> */}
       <HowItWorksSection />
       <MobileAppSection />
       <TrustSection />
