@@ -369,7 +369,7 @@ const Contact = () => {
 
                   {/* Instagram */}
                   <a
-                    href="https://instagram.com/Naity.booking"
+                    href="https://instagram.com/naity_booking"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 p-3 rounded-xl bg-muted hover:bg-muted/80 transition group"
@@ -381,7 +381,7 @@ const Contact = () => {
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-foreground">Instagram</div>
-                      <div className="text-xs text-muted-foreground">@Naity.booking</div>
+                      <div className="text-xs text-muted-foreground">@naity_booking</div>
                     </div>
                     <span className="text-muted-foreground group-hover:text-foreground transition">↗</span>
                   </a>
