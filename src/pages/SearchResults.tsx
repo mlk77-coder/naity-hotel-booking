@@ -6,6 +6,7 @@ import {
   PlaneTakeoff, UtensilsCrossed, Dumbbell, Check
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
+import type { Tables } from "@/integrations/supabase/types";
 
 import { SYRIAN_MAIN_CITIES, ALLOWED_CITY_NAMES } from "@/lib/cities";
 
@@ -39,7 +41,7 @@ const SearchResults = () => {
   const rawCity = searchParams.get("city") || "";
   const initialCity = (ALLOWED_CITY_NAMES as readonly string[]).includes(rawCity) ? rawCity : "";
 
-  const [hotels, setHotels] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<Tables<'hotels'>[]>([]);
   const [minPrices, setMinPrices] = useState<Record<string, number>>({});
   const [syncStatuses, setSyncStatuses] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -64,6 +66,13 @@ const SearchResults = () => {
         supabase.from("room_categories").select("hotel_id, price_per_night").eq("is_active", true),
         supabase.from("local_sync_settings").select("hotel_id, is_active, last_heartbeat_at"),
       ]);
+
+      if (hotelsRes.error) {
+        console.error(hotelsRes.error);
+        toast.error(lang === "ar" ? "حدث خطأ في تحميل البيانات" : "Failed to load data");
+        setLoading(false);
+        return;
+      }
 
       if (hotelsRes.data) setHotels(hotelsRes.data);
       if (roomsRes.data) {

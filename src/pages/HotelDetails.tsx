@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import type { Tables } from "@/integrations/supabase/types";
 
 const DEPOSIT_PERCENT = 10;
 
@@ -13,9 +15,9 @@ const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, lang } = useI18n();
-  const [hotel, setHotel] = useState<any>(null);
-  const [photos, setPhotos] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [hotel, setHotel] = useState<Tables<'hotels'> | null>(null);
+  const [photos, setPhotos] = useState<Tables<'hotel_photos'>[]>([]);
+  const [rooms, setRooms] = useState<Tables<'room_categories'>[]>([]);
   const [loading, setLoading] = useState(true);
   const [galleryIdx, setGalleryIdx] = useState(0);
 
@@ -38,6 +40,12 @@ const HotelDetails = () => {
         supabase.from("hotel_photos").select("*").eq("hotel_id", id).order("sort_order"),
         supabase.from("room_categories").select("*").eq("hotel_id", id).eq("is_active", true).order("price_per_night"),
       ]);
+      if (hotelRes.error) {
+        console.error(hotelRes.error);
+        toast.error(lang === "ar" ? "حدث خطأ في تحميل البيانات" : "Failed to load data");
+        setLoading(false);
+        return;
+      }
       setHotel(hotelRes.data);
       setPhotos(photosRes.data || []);
       setRooms(roomsRes.data || []);

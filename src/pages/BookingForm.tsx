@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
 import { format } from "date-fns";
+import type { Tables } from "@/integrations/supabase/types";
 
 const DEPOSIT_PERCENT = 10;
 
@@ -77,16 +78,7 @@ const NATIONALITIES = [
   { value: "Other",        labelAr: "أخرى",                labelEn: "Other" },
 ];
 
-const isPeakSeason = (dateStr: string): boolean => {
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  if (m === 6 && day >= 15) return true;
-  if (m === 7 || m === 8) return true;
-  if (m === 9 && day <= 15) return true;
-  return false;
-};
+import { isPeakSeason } from "@/lib/utils";
 
 const BookingForm = () => {
   const [searchParams] = useSearchParams();
@@ -101,8 +93,8 @@ const BookingForm = () => {
   const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
 
   const [step, setStep] = useState<Step>("details");
-  const [hotel, setHotel] = useState<any>(null);
-  const [room, setRoom] = useState<any>(null);
+  const [hotel, setHotel] = useState<Tables<'hotels'> | null>(null);
+  const [room, setRoom] = useState<Tables<'room_categories'> | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Form state
