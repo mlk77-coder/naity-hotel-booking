@@ -67,6 +67,13 @@ const SearchResults = () => {
         supabase.from("local_sync_settings").select("hotel_id, is_active, last_heartbeat_at"),
       ]);
 
+      if (hotelsRes.error) {
+        console.error(hotelsRes.error);
+        toast.error(lang === "ar" ? "حدث خطأ في تحميل البيانات" : "Failed to load data");
+        setLoading(false);
+        return;
+      }
+
       if (hotelsRes.data) setHotels(hotelsRes.data);
       if (roomsRes.data) {
         const prices: Record<string, number> = {};

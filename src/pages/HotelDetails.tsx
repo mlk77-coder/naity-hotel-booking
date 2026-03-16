@@ -40,6 +40,12 @@ const HotelDetails = () => {
         supabase.from("hotel_photos").select("*").eq("hotel_id", id).order("sort_order"),
         supabase.from("room_categories").select("*").eq("hotel_id", id).eq("is_active", true).order("price_per_night"),
       ]);
+      if (hotelRes.error) {
+        console.error(hotelRes.error);
+        toast.error(lang === "ar" ? "حدث خطأ في تحميل البيانات" : "Failed to load data");
+        setLoading(false);
+        return;
+      }
       setHotel(hotelRes.data);
       setPhotos(photosRes.data || []);
       setRooms(roomsRes.data || []);
