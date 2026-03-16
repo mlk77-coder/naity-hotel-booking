@@ -89,6 +89,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
+        </ErrorBoundary>
       </AuthProvider>
     </I18nProvider>
   </QueryClientProvider>
