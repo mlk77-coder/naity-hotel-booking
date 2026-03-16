@@ -15,7 +15,7 @@ if (!isset($_GET['key']) || $_GET['key'] !== SECRET_KEY) {
 header('Content-Type: application/json');
 
 // Database credentials
-define('MYSQL_HOST', '68.65.123.142');
+define('MYSQL_HOST', 'localhost'); // Changed from 68.65.123.142 to localhost
 define('DB_NAITY_NAME', 'naitagfz_Naity_Booking');
 define('DB_NAITY_USER', 'naitagfz_Naity_Booking');
 define('DB_NAITY_PASS', 'p3cu(+odU6F^');
@@ -84,7 +84,7 @@ try {
 
 // Test Supabase Connection
 try {
-    $url = 'https://lfnvnxeymkhyzzsvadbp.supabase.co/rest/v1/hotels?select=count&limit=1';
+    $url = 'https://scmgtoqilbkakxikigtz.supabase.co/rest/v1/hotels?select=count&limit=1';
     $headers = [
         'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbWd0b3FpbGJrYWt4aWtpZ3R6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUzNTA3MywiZXhwIjoyMDg4MTExMDczfQ.EwRswaOkNiC9xZNhjB8vYg-WOR41GAuaobSGTxj3FKM',
         'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbWd0b3FpbGJrYWt4aWtpZ3R6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUzNTA3MywiZXhwIjoyMDg4MTExMDczfQ.EwRswaOkNiC9xZNhjB8vYg-WOR41GAuaobSGTxj3FKM'
