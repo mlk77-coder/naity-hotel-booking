@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import naityLogo from "@/assets/naity-logo.png";
 import {
   Hotel, Users, BookOpen, LogOut, LayoutDashboard, Settings,
-  Menu, X, Globe, ChevronLeft, Activity, MessageSquare, Handshake
+  Menu, X, Globe, ChevronLeft, Activity, MessageSquare, Handshake, Plug
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
