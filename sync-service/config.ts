@@ -6,19 +6,19 @@ dotenv.config();
 export const config = {
   // MySQL Configuration - Namecheap Server
   mysql: {
-    host: '68.65.123.142',
+    host: process.env.MYSQL_HOST || '',
     port: 3306,
     // Naity Booking Database (Main System)
     naityDb: {
       database: 'naitagfz_Naity_Booking',
-      user: 'naitagfz_Naity_Booking',
-      password: 'p3cu(+odU6F^',
+      user: process.env.MYSQL_NAITY_USER || '',
+      password: process.env.MYSQL_NAITY_PASSWORD || '',
     },
     // ShamSoft Database (Local Hotel System)
     shamSoftDb: {
       database: 'naitagfz_Cham_Soft',
-      user: 'naitagfz_Samir',
-      password: 'r(eJX+6Cwjx1',
+      user: process.env.MYSQL_CHAM_USER || '',
+      password: process.env.MYSQL_CHAM_PASSWORD || '',
     },
   },
   
