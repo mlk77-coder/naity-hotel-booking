@@ -30,6 +30,8 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminSync from "./pages/admin/AdminSync";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminPartners from "./pages/admin/AdminPartners";
+import AdminApiCompanies from "./pages/admin/AdminApiCompanies";
+import AdminApiLogs from "./pages/admin/AdminApiLogs";
 import HotelPanel from "./pages/hotel/HotelPanel";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
 
