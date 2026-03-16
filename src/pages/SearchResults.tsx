@@ -40,7 +40,7 @@ const SearchResults = () => {
   const rawCity = searchParams.get("city") || "";
   const initialCity = (ALLOWED_CITY_NAMES as readonly string[]).includes(rawCity) ? rawCity : "";
 
-  const [hotels, setHotels] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<Tables<'hotels'>[]>([]);
   const [minPrices, setMinPrices] = useState<Record<string, number>>({});
   const [syncStatuses, setSyncStatuses] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);

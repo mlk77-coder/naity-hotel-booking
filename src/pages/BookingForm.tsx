@@ -93,8 +93,8 @@ const BookingForm = () => {
   const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
 
   const [step, setStep] = useState<Step>("details");
-  const [hotel, setHotel] = useState<any>(null);
-  const [room, setRoom] = useState<any>(null);
+  const [hotel, setHotel] = useState<Tables<'hotels'> | null>(null);
+  const [room, setRoom] = useState<Tables<'room_categories'> | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Form state
