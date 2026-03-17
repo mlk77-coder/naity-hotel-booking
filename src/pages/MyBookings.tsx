@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Search, Calendar, MapPin, Star,
          ChevronDown, ChevronUp, Copy, Check, AlertTriangle, XCircle } from "lucide-react";
@@ -179,6 +180,7 @@ function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, o
 
 export default function MyBookings() {
   const { lang } = useI18n();
+  const queryClient = useQueryClient();
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -238,6 +240,7 @@ export default function MyBookings() {
       });
       if (error || !data?.success) throw new Error(error?.message ?? "Failed");
       setCancellingBooking(null);
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
       toast.success(data.refunded > 0
         ? `Booking cancelled. Refund of $${data.refunded} in 5-10 business days.`
         : "Booking cancelled. No refund applies.");
