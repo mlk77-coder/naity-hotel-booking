@@ -24,9 +24,9 @@ const AdminHotels = () => {
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
-  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null }>({
+  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null; company_id?: string | null; external_hotel_id?: number | null }>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
-    contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null,
+    contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null,
   });
 
   const { data: techPartners = [] } = useQuery({
@@ -34,6 +34,15 @@ const AdminHotels = () => {
     queryFn: async () => {
       const { data } = await supabase.from("tech_partners")
         .select("id, name, name_ar").eq("is_active", true).order("name");
+      return data ?? [];
+    },
+  });
+
+  const { data: apiCompanies = [] } = useQuery({
+    queryKey: ["api-companies-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("api_companies")
+        .select("id, name, name_ar").eq("status", "active").order("name");
       return data ?? [];
     },
   });
@@ -97,7 +106,7 @@ const AdminHotels = () => {
   });
 
   const resetForm = () => {
-    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null });
+    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null });
     setEditing(null);
   };
 
@@ -110,6 +119,8 @@ const AdminHotels = () => {
       contact_phone: hotel.contact_phone ?? "", contact_email: hotel.contact_email ?? "",
       property_type: (hotel as any).property_type ?? "hotel",
       tech_partner_id: (hotel as any).tech_partner_id ?? null,
+      company_id: (hotel as any).company_id ?? null,
+      external_hotel_id: (hotel as any).external_hotel_id ?? null,
     });
     setOpen(true);
   };
@@ -193,6 +204,31 @@ const AdminHotels = () => {
                     ))}
                   </select>
                 </div>
+                {/* API Company */}
+                <div>
+                  <Label>{lang === "ar" ? "شركة إدارة الفندق (API)" : "Hotel API Company"}</Label>
+                  <select
+                    value={(form as any).company_id ?? ""}
+                    onChange={e => setForm(f => ({ ...f, company_id: e.target.value || null }))}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">{lang === "ar" ? "— بدون API —" : "— No API —"}</option>
+                    {apiCompanies.map((c: any) => (
+                      <option key={c.id} value={c.id}>{lang === "ar" ? (c.name_ar || c.name) : c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                {(form as any).company_id && (
+                  <div>
+                    <Label>{lang === "ar" ? "رقم الفندق في نظام الشركة" : "Hotel ID in Company System"}</Label>
+                    <Input
+                      type="number"
+                      value={(form as any).external_hotel_id ?? ""}
+                      onChange={e => setForm(f => ({ ...f, external_hotel_id: e.target.value ? +e.target.value : null }))}
+                      placeholder={lang === "ar" ? "مثال: 42" : "e.g. 42"}
+                    />
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>{tx("هاتف التواصل", "Contact Phone")}</Label>
