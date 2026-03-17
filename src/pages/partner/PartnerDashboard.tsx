@@ -209,6 +209,21 @@ const PartnerDashboard = () => {
     );
   }
 
+  if (noHotels) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background text-foreground">
+        <div className="text-center py-20">
+          <p className="text-muted-foreground">
+            {lang === "ar"
+              ? "لم يتم تعيين أي فنادق لهذا الحساب بعد. تواصل مع الإدارة."
+              : "No properties assigned to this account yet. Contact administration."}
+          </p>
+        </div>
+        <Button onClick={signOut} variant="outline">{lang === "ar" ? "تسجيل الخروج" : "Sign Out"}</Button>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
