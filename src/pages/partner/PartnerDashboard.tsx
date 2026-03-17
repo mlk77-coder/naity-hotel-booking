@@ -37,6 +37,7 @@ const PartnerDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [noHotels, setNoHotels] = useState(false);
 
   const [range, setRange] = useState<DateRange>("this_month");
   const [customFrom, setCustomFrom] = useState("");
@@ -97,7 +98,7 @@ const PartnerDashboard = () => {
       const hList = hData ?? [];
       setHotels(hList);
 
-      if (!hList.length) { setLoading(false); return; }
+      if (!hList.length) { setLoading(false); setNoHotels(true); return; }
 
       // 3. Bookings
       const hotelIds = hList.map(h => h.id);
@@ -203,6 +204,21 @@ const PartnerDashboard = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background text-foreground">
         <p className="text-lg font-semibold">{lang === "ar" ? "غير مصرح" : "Unauthorized"}</p>
+        <Button onClick={signOut} variant="outline">{lang === "ar" ? "تسجيل الخروج" : "Sign Out"}</Button>
+      </div>
+    );
+  }
+
+  if (noHotels) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background text-foreground">
+        <div className="text-center py-20">
+          <p className="text-muted-foreground">
+            {lang === "ar"
+              ? "لم يتم تعيين أي فنادق لهذا الحساب بعد. تواصل مع الإدارة."
+              : "No properties assigned to this account yet. Contact administration."}
+          </p>
+        </div>
         <Button onClick={signOut} variant="outline">{lang === "ar" ? "تسجيل الخروج" : "Sign Out"}</Button>
       </div>
     );
