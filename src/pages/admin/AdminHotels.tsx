@@ -24,9 +24,9 @@ const AdminHotels = () => {
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
-  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null }>({
+  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null; company_id?: string | null; external_hotel_id?: number | null }>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
-    contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null,
+    contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null,
   });
 
   const { data: techPartners = [] } = useQuery({
