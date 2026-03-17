@@ -37,6 +37,7 @@ const PartnerDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [noHotels, setNoHotels] = useState(false);
 
   const [range, setRange] = useState<DateRange>("this_month");
   const [customFrom, setCustomFrom] = useState("");
