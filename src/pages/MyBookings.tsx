@@ -239,6 +239,7 @@ export default function MyBookings() {
       });
       if (error || !data?.success) throw new Error(error?.message ?? "Failed");
       setCancellingBooking(null);
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
       toast.success(data.refunded > 0
         ? `Booking cancelled. Refund of $${data.refunded} in 5-10 business days.`
         : "Booking cancelled. No refund applies.");
