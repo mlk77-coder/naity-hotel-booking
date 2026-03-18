@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
           email_confirm: true,
           user_metadata: { full_name: full_name || "" },
         });
-      if (authErr) throw authErr;
+      if (authErr) return json({ error: authErr.message }, 400);
 
       await supabase
         .from("user_roles")
