@@ -62,20 +62,34 @@ Deno.serve(async (req) => {
           email_confirm: true,
           user_metadata: { full_name: full_name || "" },
         });
-      if (authErr) return json({ error: authErr.message }, 400);
 
-      await supabase
+      if (authErr) {
+        const status = authErr.message
+          .toLowerCase()
+          .includes("already been registered")
+          ? 409
+          : 400;
+        return json({ error: authErr.message }, status);
+      }
+
+      const { error: roleErr } = await supabase
         .from("user_roles")
         .upsert({ user_id: authData.user.id, role });
 
-      return json({ success: true, user_id: authData.user.id });
+      if (roleErr) {
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        return json({ error: roleErr.message }, 500);
+      }
+
+      return json({ success: true, user_id: authData.user.id, email });
     }
 
     // UPDATE ROLE
     if (action === "update_role") {
       if (!user_id || !role)
         return json({ error: "user_id and role required" }, 400);
-      await supabase.from("user_roles").upsert({ user_id, role });
+      const { error } = await supabase.from("user_roles").upsert({ user_id, role });
+      if (error) return json({ error: error.message }, 500);
       return json({ success: true });
     }
 
@@ -84,16 +98,28 @@ Deno.serve(async (req) => {
       if (!user_id) return json({ error: "user_id required" }, 400);
       if (user_id === callerId)
         return json({ error: "Cannot delete your own account" }, 400);
-      await supabase.from("user_roles").delete().eq("user_id", user_id);
+
+      const { error: roleDeleteErr } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", user_id);
+      if (roleDeleteErr) return json({ error: roleDeleteErr.message }, 500);
+
       const { error: delErr } = await supabase.auth.admin.deleteUser(user_id);
-      if (delErr) throw delErr;
+      if (delErr) return json({ error: delErr.message }, 500);
       return json({ success: true });
     }
 
     // LIST
     if (action === "list") {
-      const { data: usersData } = await supabase.auth.admin.listUsers();
-      const { data: roles } = await supabase.from("user_roles").select("*");
+      const { data: usersData, error: usersErr } = await supabase.auth.admin.listUsers();
+      if (usersErr) return json({ error: usersErr.message }, 500);
+
+      const { data: roles, error: rolesErr } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+      if (rolesErr) return json({ error: rolesErr.message }, 500);
+
       const result = (usersData?.users ?? []).map((u: any) => ({
         id: u.id,
         email: u.email,
@@ -106,7 +132,7 @@ Deno.serve(async (req) => {
     }
 
     return json({ error: "Unknown action" }, 400);
-  } catch (err: any) {
-    return json({ error: err.message }, 500);
+  } catch (err: unknown) {
+    return json({ error: (err as Error).message }, 500);
   }
 });
