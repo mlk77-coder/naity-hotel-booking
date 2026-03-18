@@ -48,7 +48,20 @@ const callManageUser = async (body: Record<string, unknown>) => {
   const { data, error } = await supabase.functions.invoke("manage-admin-user", {
     body,
   });
-  if (error) throw new Error(error.message);
+
+  if (error) {
+    const response = (error as { context?: Response }).context;
+    if (response) {
+      try {
+        const payload = await response.clone().json();
+        if (payload?.error) throw new Error(payload.error);
+      } catch {
+        // Fallback to generic message below
+      }
+    }
+    throw new Error(error.message || "Request failed");
+  }
+
   if (data?.error) throw new Error(data.error);
   return data;
 };
