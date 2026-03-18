@@ -99,7 +99,9 @@ Deno.serve(async (req) => {
 
       await supabase.from("user_roles").delete().eq("user_id", user_id);
       const { error: delErr } = await supabase.auth.admin.deleteUser(user_id);
-      if (delErr) return json({ error: delErr.message }, 500);
+      if (delErr && !delErr.message.toLowerCase().includes("not found")) {
+        return json({ error: delErr.message }, 500);
+      }
       return json({ success: true });
     }
 
