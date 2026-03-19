@@ -194,12 +194,12 @@ Deno.serve(async (req) => {
                   <td style="font-weight:700;color:#1a1a2e;text-align:right;">${booking.guests_count ?? 1} ضيف</td>
                   <td style="color:#888;text-align:left;">عدد الضيوف</td>
                 </tr>
-                ${(booking as any).children_ages?.length > 0 ? `<tr style="border-bottom:1px solid #f0f0f0;">
-                  <td style="font-weight:700;color:#1a1a2e;text-align:right;">${(booking as any).children_ages.join(', ')} سنة</td>
+                ${(booking.children_count ?? 0) > 0 ? `<tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="font-weight:700;color:#1a1a2e;text-align:right;">${(booking.children_ages ?? []).join(', ')} سنة</td>
                   <td style="color:#888;text-align:left;">أعمار الأطفال</td>
                 </tr>` : ''}
-                ${(booking as any).breakfast_included ? `<tr style="border-bottom:1px solid #f0f0f0;">
-                  <td style="font-weight:700;color:#d97706;text-align:right;">🍳 مشمول ($${(booking as any).breakfast_total})</td>
+                ${booking.breakfast_included ? `<tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="font-weight:700;color:#d97706;text-align:right;">🍳 مشمول في السعر</td>
                   <td style="color:#888;text-align:left;">الفطور</td>
                 </tr>` : ''}
                 <tr style="border-bottom:1px solid #f0f0f0;">
@@ -283,13 +283,13 @@ Deno.serve(async (req) => {
                   <td style="color:#888;">Number of Guests</td>
                   <td style="font-weight:700;color:#1a1a2e;">${booking.guests_count ?? 1} guest${(booking.guests_count ?? 1) > 1 ? "s" : ""}</td>
                 </tr>
-                ${(booking as any).children_ages?.length > 0 ? `<tr style="border-bottom:1px solid #f0f0f0;">
+                ${(booking.children_count ?? 0) > 0 ? `<tr style="border-bottom:1px solid #f0f0f0;">
                   <td style="color:#888;">Children Ages</td>
-                  <td style="font-weight:700;color:#1a1a2e;">${(booking as any).children_ages.join(', ')} yr</td>
+                  <td style="font-weight:700;color:#1a1a2e;">${(booking.children_ages ?? []).join(', ')} yr</td>
                 </tr>` : ''}
-                ${(booking as any).breakfast_included ? `<tr style="border-bottom:1px solid #f0f0f0;">
+                ${booking.breakfast_included ? `<tr style="border-bottom:1px solid #f0f0f0;">
                   <td style="color:#888;">Breakfast</td>
-                  <td style="font-weight:700;color:#d97706;">🍳 Included ($${(booking as any).breakfast_total})</td>
+                  <td style="font-weight:700;color:#d97706;">🍳 Included in rate</td>
                 </tr>` : ''}
                 <tr style="border-bottom:1px solid #f0f0f0;">
                   <td style="color:#888;font-weight:700;">Total Amount</td>
@@ -441,7 +441,17 @@ Deno.serve(async (req) => {
 <tr><td style="color:#999;font-size:12px;border-bottom:1px solid #eee">Email</td><td style="border-bottom:1px solid #eee">${booking.guest_email}</td></tr>
 <tr><td style="color:#999;font-size:12px;border-bottom:1px solid #eee">Phone</td><td style="border-bottom:1px solid #eee">${booking.guest_phone ?? "—"}</td></tr>
 <tr><td style="color:#999;font-size:12px;border-bottom:1px solid #eee">Nationality</td><td style="border-bottom:1px solid #eee">${booking.nationality ?? "—"}</td></tr>
-<tr><td style="color:#999;font-size:12px">Guests</td><td>${booking.guests_count ?? 1} person(s)</td></tr>
+<tr><td style="color:#999;font-size:12px;border-bottom:1px solid #eee">Guests</td><td style="border-bottom:1px solid #eee">${booking.guests_count ?? 1} person(s)</td></tr>
+<tr><td style="color:#999;font-size:12px;border-bottom:1px solid #eee">Children / أطفال</td>
+<td style="border-bottom:1px solid #eee">
+  ${(booking.children_count ?? 0) > 0
+    ? `${booking.children_count} (ages: ${(booking.children_ages ?? []).join(', ')})`
+    : '0'}
+</td></tr>
+<tr><td style="color:#999;font-size:12px;">Breakfast</td>
+<td style="font-weight:bold">
+  ${booking.breakfast_included ? '🍳 Requested' : '❌ Not requested'}
+</td></tr>
 </table>
 <h3 style="color:#1a1a2e;margin-top:24px">🛏 Stay Details</h3>
 <table width="100%" style="border:1px solid #eee;border-radius:8px" cellpadding="12">
