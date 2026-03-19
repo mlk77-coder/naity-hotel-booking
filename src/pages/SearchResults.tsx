@@ -115,6 +115,7 @@ const SearchResults = () => {
         const hasAll = amenityFilters.every(af => hotelAmenities.some(ha => ha.includes(af)));
         if (!hasAll) return false;
       }
+      if (breakfastOnly && !(h as any).breakfast_available) return false;
       return true;
     });
 
