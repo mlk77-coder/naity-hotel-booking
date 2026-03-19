@@ -146,6 +146,7 @@ const SearchResults = () => {
     setPriceRange([0, 500]);
     setSortBy("recommended");
     setPropertyTypeFilter("all");
+    setBreakfastOnly(false);
   };
 
   const toggleStar = (s: number) => {
