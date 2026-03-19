@@ -430,6 +430,11 @@ const HotelDetails = () => {
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Users className="w-4 h-4" /> {t("hotel.upTo")} {room.max_guests} {t("hotel.guests")}
                       </div>
+                      <span className="text-xs text-muted-foreground">
+                        👥 {tx(`يتسع لـ ${room.max_guests} أشخاص`, `Fits ${room.max_guests} guests`)}
+                        {" · "}
+                        {tx("الأطفال دون 14 مجاناً", "Children under 14 free")}
+                      </span>
 
                       {room.amenities && room.amenities.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
