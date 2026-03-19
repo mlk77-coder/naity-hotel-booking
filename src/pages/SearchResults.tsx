@@ -410,6 +410,11 @@ const SearchResults = () => {
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isApartment ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>
                                 {isApartment ? tx("🏠 شقة", "🏠 Apartment") : tx("🏨 فندق", "🏨 Hotel")}
                               </span>
+                              {(hotel as any).breakfast_available && (
+                                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                                  🍳 {tx("فطور", "Breakfast")}
+                                </span>
+                              )}
                             </div>
                             <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{name}</h3>
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
