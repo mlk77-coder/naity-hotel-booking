@@ -136,7 +136,7 @@ const SearchResults = () => {
         });
     }
     return result;
-  }, [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, priceRange, sortBy, minPrices, syncStatuses]);
+  }, [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, breakfastOnly, priceRange, sortBy, minPrices, syncStatuses]);
 
   const clearAllFilters = () => {
     setCity("");
