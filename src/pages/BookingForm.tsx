@@ -641,6 +641,13 @@ const BookingForm = () => {
                       toast.error(tx("يرجى الإجابة على سؤال الفطور", "Please answer the breakfast question"));
                       return;
                     }
+                    if (actualChildren >= 3 && !supervisorOk) {
+                      toast.error(tx(
+                        `يجب إضافة ${requiredAdults - effectiveAdults} بالغ مشرف`,
+                        `Please add ${requiredAdults - effectiveAdults} supervising adult(s)`
+                      ));
+                      return;
+                    }
                     if (!termsAccepted) {
                       toast.error(tx("يجب الموافقة على الشروط والأحكام", "You must accept the Terms & Conditions"));
                       return;
