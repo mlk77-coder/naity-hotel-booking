@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,21 @@ const AdminManagers = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [hotelId, setHotelId] = useState("");
+  const [hotelsList, setHotelsList] = useState<any[]>([]);
+
+  // Fetch hotels directly with useEffect to avoid RLS timing issues
+  useEffect(() => {
+    const fetchHotels = async () => {
+      const { data, error } = await supabase
+        .from("hotels")
+        .select("id, name_ar, name_en")
+        .order("name_en");
+      if (!error && data) {
+        setHotelsList(data);
+      }
+    };
+    fetchHotels();
+  }, []);
 
   const { data: managers, isLoading } = useQuery({
     queryKey: ["admin-managers"],
@@ -48,14 +63,6 @@ const AdminManagers = () => {
         profile: profiles?.find(p => p.user_id === r.user_id) ?? null,
         hotel: hotels?.find(h => h.manager_id === r.user_id) ?? null,
       }));
-    },
-  });
-
-  const { data: hotels } = useQuery({
-    queryKey: ["admin-hotels-list"],
-    queryFn: async () => {
-      const { data } = await supabase.from("hotels").select("id, name_ar, name_en").order("name_en");
-      return data ?? [];
     },
   });
 
@@ -102,37 +109,59 @@ const AdminManagers = () => {
           <h1 className="text-2xl font-bold text-foreground">
             {lang === "ar" ? "مدراء الفنادق" : "Hotel Managers"}
           </h1>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => {
+            setOpen(v);
+            if (v) {
+              // Refresh hotels list when dialog opens
+              supabase.from("hotels").select("id, name_ar, name_en").order("name_en")
+                .then(({ data }) => { if (data) setHotelsList(data); });
+            }
+          }}>
             <DialogTrigger asChild>
-              <Button className="gradient-cta gap-2"><UserPlus className="w-4 h-4" /> {lang === "ar" ? "إضافة مدير" : "Add Manager"}</Button>
+              <Button className="gradient-cta gap-2">
+                <UserPlus className="w-4 h-4" />
+                {lang === "ar" ? "إضافة مدير" : "Add Manager"}
+              </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="z-[200]">
               <DialogHeader>
-                <DialogTitle>{lang === "ar" ? "إضافة مدير فندق جديد" : "Add New Hotel Manager"}</DialogTitle>
+                <DialogTitle>
+                  {lang === "ar" ? "إضافة مدير فندق جديد" : "Add New Hotel Manager"}
+                </DialogTitle>
               </DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); createManager.mutate(); }} className="space-y-4">
                 <div>
                   <Label>{lang === "ar" ? "الاسم الكامل" : "Full Name"}</Label>
-                  <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                  <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required className="mt-1" />
                 </div>
                 <div>
                   <Label>{lang === "ar" ? "البريد الإلكتروني" : "Email"}</Label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" />
                 </div>
                 <div>
                   <Label>{lang === "ar" ? "كلمة المرور" : "Password"}</Label>
-                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1" />
                 </div>
                 <div>
                   <Label>{lang === "ar" ? "الفندق" : "Hotel"}</Label>
-                  <Select value={hotelId} onValueChange={setHotelId}>
-                    <SelectTrigger><SelectValue placeholder={lang === "ar" ? "اختر فندق" : "Select hotel"} /></SelectTrigger>
-                    <SelectContent>
-                      {hotels?.map((h) => (
-                        <SelectItem key={h.id} value={h.id}>{lang === "ar" ? h.name_ar : h.name_en}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {hotelsList.length === 0 ? (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {lang === "ar" ? "جاري تحميل الفنادق..." : "Loading hotels..."}
+                    </p>
+                  ) : (
+                    <Select value={hotelId} onValueChange={setHotelId}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder={lang === "ar" ? "اختر فندق" : "Select hotel"} />
+                      </SelectTrigger>
+                      <SelectContent className="z-[300]">
+                        {hotelsList.map((h) => (
+                          <SelectItem key={h.id} value={h.id}>
+                            {lang === "ar" ? (h.name_ar || h.name_en) : (h.name_en || h.name_ar)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <Button type="submit" className="w-full gradient-cta" disabled={createManager.isPending}>
                   {createManager.isPending ? "..." : (lang === "ar" ? "إنشاء حساب" : "Create Account")}
@@ -148,7 +177,6 @@ const AdminManagers = () => {
           </div>
         ) : (
           <>
-            {/* Stats Row */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="bg-card rounded-xl p-4 border border-border/50 shadow-card text-center">
                 <p className="text-2xl font-extrabold text-primary">{managers?.length ?? 0}</p>
@@ -174,7 +202,6 @@ const AdminManagers = () => {
               </div>
             </div>
 
-            {/* Table */}
             <div className="bg-card rounded-2xl border border-border/50 shadow-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -209,51 +236,38 @@ const AdminManagers = () => {
                         </td>
                       </tr>
                     )}
-
                     {managers?.map((m) => {
                       const profile = m.profile as any;
                       const hotel = m.hotel as any;
-                      const hotelName = hotel
-                        ? (lang === "ar" ? hotel.name_ar : hotel.name_en)
-                        : null;
-
+                      const hotelName = hotel ? (lang === "ar" ? hotel.name_ar : hotel.name_en) : null;
                       return (
                         <tr key={m.id} className="hover:bg-muted/30 transition-colors group">
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 font-bold text-primary text-sm">
-                                {profile?.full_name
-                                  ? profile.full_name.charAt(0).toUpperCase()
-                                  : "?"}
+                                {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : "?"}
                               </div>
                               <span className="font-semibold text-foreground">
                                 {profile?.full_name || (lang === "ar" ? "بدون اسم" : "No name")}
                               </span>
                             </div>
                           </td>
-
                           <td className="px-5 py-4 text-muted-foreground" dir="ltr">
                             {profile?.email ?? "—"}
                           </td>
-
                           <td className="px-5 py-4">
                             {hotel ? (
                               <div className="flex items-center gap-2.5">
                                 {hotel.cover_image ? (
-                                  <img
-                                    src={hotel.cover_image}
-                                    alt={hotelName}
-                                    className="w-9 h-9 rounded-lg object-cover shrink-0 border border-border/50"
-                                  />
+                                  <img src={hotel.cover_image} alt={hotelName}
+                                    className="w-9 h-9 rounded-lg object-cover shrink-0 border border-border/50" />
                                 ) : (
                                   <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
                                     <Building2 className="w-4 h-4 text-muted-foreground" />
                                   </div>
                                 )}
                                 <div>
-                                  <p className="font-medium text-foreground leading-tight">
-                                    {hotelName}
-                                  </p>
+                                  <p className="font-medium text-foreground leading-tight">{hotelName}</p>
                                   <div className="flex gap-0.5 mt-0.5">
                                     {Array.from({ length: hotel.stars ?? 0 }).map((_, i) => (
                                       <span key={i} className="text-amber-400 text-xs">★</span>
@@ -262,48 +276,35 @@ const AdminManagers = () => {
                                 </div>
                               </div>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 px-2.5 py-1 rounded-full font-medium">
+                              <span className="inline-flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full font-medium">
                                 <AlertCircle className="w-3 h-3" />
                                 {lang === "ar" ? "لم يُحدد فندق" : "No hotel assigned"}
                               </span>
                             )}
                           </td>
-
-                          <td className="px-5 py-4 text-muted-foreground">
-                            {hotel?.city ?? "—"}
-                          </td>
-
+                          <td className="px-5 py-4 text-muted-foreground">{hotel?.city ?? "—"}</td>
                           <td className="px-5 py-4">
                             {hotel ? (
                               <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border ${
                                 hotel.is_active
-                                  ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50"
-                                  : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700"
+                                  ? "bg-green-50 text-green-700 border-green-200"
+                                  : "bg-slate-100 text-slate-500 border-slate-200"
                               }`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${hotel.is_active ? "bg-green-500" : "bg-slate-400"}`} />
-                                {hotel.is_active
-                                  ? (lang === "ar" ? "نشط" : "Active")
-                                  : (lang === "ar" ? "غير نشط" : "Inactive")}
+                                {hotel.is_active ? (lang === "ar" ? "نشط" : "Active") : (lang === "ar" ? "غير نشط" : "Inactive")}
                               </span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
+                            ) : <span className="text-muted-foreground">—</span>}
                           </td>
-
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                               {hotel && (
-                                <button
-                                  onClick={() => navigate(`/admin/hotels/${hotel.id}`)}
-                                  className="p-2 rounded-lg hover:bg-muted transition text-muted-foreground hover:text-primary"
-                                  title={lang === "ar" ? "عرض الفندق" : "View Hotel"}>
+                                <button onClick={() => navigate(`/admin/hotels/${hotel.id}`)}
+                                  className="p-2 rounded-lg hover:bg-muted transition text-muted-foreground hover:text-primary">
                                   <ExternalLink className="w-4 h-4" />
                                 </button>
                               )}
-                              <button
-                                onClick={() => removeManager.mutate(m.id)}
-                                className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition text-muted-foreground hover:text-red-500"
-                                title={lang === "ar" ? "إزالة المدير" : "Remove Manager"}>
+                              <button onClick={() => removeManager.mutate(m.id)}
+                                className="p-2 rounded-lg hover:bg-red-50 transition text-muted-foreground hover:text-red-500">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
