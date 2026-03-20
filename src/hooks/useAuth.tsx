@@ -27,9 +27,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-      setRole(data?.role ?? null);
+        .eq("user_id", userId);
+      // Prioritize: admin > hotel_manager > viewer > null
+      const roles = (data ?? []).map((r: any) => r.role);
+      if (roles.includes("admin")) setRole("admin");
+      else if (roles.includes("hotel_manager")) setRole("hotel_manager");
+      else if (roles.includes("viewer")) setRole("viewer");
+      else setRole(null);
     } catch {
       setRole(null);
     } finally {
