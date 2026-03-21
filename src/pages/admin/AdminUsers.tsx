@@ -45,8 +45,15 @@ const ROLE_OPTIONS = [
 ] as const;
 
 const callManageUser = async (body: Record<string, unknown>) => {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) throw new Error("Not authenticated");
+
   const { data, error } = await supabase.functions.invoke("manage-admin-user", {
     body,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   if (error) {
