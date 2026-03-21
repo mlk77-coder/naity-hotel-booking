@@ -144,12 +144,12 @@ Deno.serve(async (req) => {
         userId = createData.user.id;
       }
 
+      await supabase.from("user_roles").delete().eq("user_id", userId);
       const { error: roleErr } = await supabase
         .from("user_roles")
-        .upsert({ user_id: userId, role });
+        .insert({ user_id: userId, role });
 
       if (roleErr) {
-        // Only delete user if we just created them
         if (authData?.user) await supabase.auth.admin.deleteUser(userId);
         return json({ error: roleErr.message }, 500);
       }
@@ -168,9 +168,10 @@ Deno.serve(async (req) => {
     if (action === "update_role") {
       if (!user_id || !role)
         return json({ error: "user_id and role are required" }, 400);
+      await supabase.from("user_roles").delete().eq("user_id", user_id);
       const { error } = await supabase
         .from("user_roles")
-        .upsert({ user_id, role });
+        .insert({ user_id, role });
       if (error) return json({ error: error.message }, 500);
       return json({ success: true });
     }
