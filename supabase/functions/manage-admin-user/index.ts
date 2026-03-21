@@ -144,12 +144,12 @@ Deno.serve(async (req) => {
         userId = createData.user.id;
       }
 
+      await supabase.from("user_roles").delete().eq("user_id", userId);
       const { error: roleErr } = await supabase
         .from("user_roles")
-        .upsert({ user_id: userId, role });
+        .insert({ user_id: userId, role });
 
       if (roleErr) {
-        // Only delete user if we just created them
         if (authData?.user) await supabase.auth.admin.deleteUser(userId);
         return json({ error: roleErr.message }, 500);
       }
