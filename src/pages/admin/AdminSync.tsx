@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -18,28 +18,24 @@ const AdminSync = () => {
   const { data: hotels } = useQuery({
     queryKey: ["admin-hotels-sync"],
     queryFn: async () => {
-      const { data } = await supabase.from("hotels").select("id, name_ar, name_en");
-      return data ?? [];
+      const response: any = await apiClient.get("/api/hotels");
+      return response.data ?? [];
     },
   });
 
   const { data: syncSettings } = useQuery({
     queryKey: ["admin-sync-settings"],
     queryFn: async () => {
-      const { data } = await supabase.from("local_sync_settings").select("*");
-      return data ?? [];
+      const response: any = await apiClient.get("/api/admin/sync-settings");
+      return response.data ?? [];
     },
   });
 
   const { data: webhookLogs } = useQuery({
     queryKey: ["admin-webhook-logs"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("webhook_logs")
-        .select("*, hotels(name_ar, name_en)")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      return data ?? [];
+      const response: any = await apiClient.get("/api/admin/webhook-logs");
+      return response.data ?? [];
     },
   });
 
@@ -93,10 +89,10 @@ const AdminSync = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {webhookLogs?.map((log) => (
+                  {webhookLogs?.map((log: any) => (
                     <tr key={log.id} className="hover:bg-muted/50">
                       <td className="p-3 text-foreground text-xs font-mono">{format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss")}</td>
-                      <td className="p-3 text-foreground">{lang === "ar" ? (log.hotels as any)?.name_ar : (log.hotels as any)?.name_en}</td>
+                      <td className="p-3 text-foreground">{lang === "ar" ? log.hotel_name_ar : log.hotel_name_en}</td>
                       <td className="p-3 text-foreground">{log.event_type}</td>
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -140,11 +136,9 @@ const SyncCard = ({ hotel, settings, lang, onSaved }: {
         is_active: isActive,
       };
       if (settings) {
-        const { error } = await supabase.from("local_sync_settings").update(payload).eq("id", settings.id);
-        if (error) throw error;
+        await apiClient.put(`/api/admin/sync-settings/${settings.id}`, payload);
       } else {
-        const { error } = await supabase.from("local_sync_settings").insert(payload);
-        if (error) throw error;
+        await apiClient.post("/api/admin/sync-settings", payload);
       }
     },
     onSuccess: () => {

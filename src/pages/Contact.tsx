@@ -4,7 +4,7 @@ import {
   Mail, Phone, MapPin, Building2, Send,
   Globe, User, MessageSquare, Tag
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
@@ -80,15 +80,18 @@ const Contact = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("contact_messages").insert({
-        full_name: fullName.trim(),
+      const response: any = await apiClient.post('/api/contact', {
+        name: fullName.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         country,
         subject,
         message: message.trim(),
       });
-      if (error) throw error;
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to send message');
+      }
 
       setSent(true);
       toast.success(tx(
@@ -96,6 +99,7 @@ const Contact = () => {
         "Message sent! We'll get back to you within 24 hours."
       ));
     } catch (err: any) {
+      console.error('Error sending message:', err);
       toast.error(err.message || tx("حدث خطأ، حاول مرة أخرى", "An error occurred, please try again"));
     } finally {
       setLoading(false);

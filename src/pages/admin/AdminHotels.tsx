@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight, Clock } from "lucide-react";
 import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
 
 const AdminHotels = () => {
@@ -21,10 +20,10 @@ const AdminHotels = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
-  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null; company_id?: string | null; external_hotel_id?: number | null }>({
+  const [form, setForm] = useState<any>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
     contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null,
   });
@@ -32,61 +31,70 @@ const AdminHotels = () => {
   const { data: techPartners = [] } = useQuery({
     queryKey: ["tech-partners-list"],
     queryFn: async () => {
-      const { data } = await supabase.from("tech_partners")
-        .select("id, name, name_ar").eq("is_active", true).order("name");
-      return data ?? [];
+      try {
+        const response: any = await apiClient.get('/api/admin/tech-partners');
+        return response.success ? response.data : [];
+      } catch (error) {
+        return [];
+      }
     },
   });
 
   const { data: apiCompanies = [] } = useQuery({
     queryKey: ["api-companies-list"],
     queryFn: async () => {
-      const { data } = await supabase.from("api_companies")
-        .select("id, name, name_ar").eq("status", "active").order("name");
-      return data ?? [];
+      try {
+        const response: any = await apiClient.get('/api/admin/api-companies');
+        return response.success ? response.data : [];
+      } catch (error) {
+        return [];
+      }
     },
   });
 
   const { data: hotels, isLoading } = useQuery({
     queryKey: ["admin-hotels"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("hotels").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      const response: any = await apiClient.get('/api/hotels');
+      if (!response.success) throw new Error(response.message);
+      return response.data;
     },
   });
 
   const { data: syncSettings } = useQuery({
     queryKey: ["admin-hotels-sync-timestamps"],
     queryFn: async () => {
-      const { data } = await supabase.from("local_sync_settings").select("hotel_id, last_sync_at, is_active");
-      return data ?? [];
+      try {
+        const response: any = await apiClient.get('/api/admin/sync-settings');
+        return response.success ? response.data : [];
+      } catch (error) {
+        return [];
+      }
     },
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data: Partial<TablesInsert<"hotels">>) => {
+    mutationFn: async (data: any) => {
       if (editing) {
-        const { error } = await supabase.from("hotels").update(data).eq("id", editing.id);
-        if (error) throw error;
+        const response: any = await apiClient.put(`/api/hotels/${editing.id}`, data);
+        if (!response.success) throw new Error(response.message);
       } else {
-        const { error } = await supabase.from("hotels").insert(data as TablesInsert<"hotels">);
-        if (error) throw error;
+        const response: any = await apiClient.post('/api/hotels', data);
+        if (!response.success) throw new Error(response.message);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
       toast.success(editing ? tx("تم تحديث الفندق", "Hotel updated") : tx("تم إضافة الفندق", "Hotel added"));
       if (!editing) {
-        supabase.functions.invoke("send-admin-notification", {
-          body: {
-            type: "new_hotel",
-            data: {
-              name_en: form.name_en,
-              name_ar: form.name_ar,
-              city: form.city,
-              property_type: form.property_type ?? "hotel",
-            },
+        // Send notification
+        apiClient.post('/api/admin/notifications', {
+          type: "new_hotel",
+          data: {
+            name_en: form.name_en,
+            name_ar: form.name_ar,
+            city: form.city,
+            property_type: form.property_type ?? "hotel",
           },
         }).catch((e) => console.error("Hotel notification failed:", e));
       }
@@ -98,8 +106,8 @@ const AdminHotels = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("hotels").delete().eq("id", id);
-      if (error) throw error;
+      const response: any = await apiClient.delete(`/api/hotels/${id}`);
+      if (!response.success) throw new Error(response.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
@@ -109,8 +117,8 @@ const AdminHotels = () => {
 
   const toggleManualMode = useMutation({
     mutationFn: async ({ id, manual_mode }: { id: string; manual_mode: boolean }) => {
-      const { error } = await supabase.from("hotels").update({ manual_mode }).eq("id", id);
-      if (error) throw error;
+      const response: any = await apiClient.patch(`/api/hotels/${id}/manual-mode`, { manual_mode });
+      if (!response.success) throw new Error(response.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
@@ -123,7 +131,7 @@ const AdminHotels = () => {
     setEditing(null);
   };
 
-  const openEdit = (hotel: Tables<"hotels">) => {
+  const openEdit = (hotel: any) => {
     setEditing(hotel);
     setForm({
       name_en: hotel.name_en, name_ar: hotel.name_ar, city: hotel.city,

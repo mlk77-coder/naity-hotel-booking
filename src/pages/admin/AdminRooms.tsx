@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, BedDouble } from "lucide-react";
-import type { Tables } from "@/integrations/supabase/types";
 
 const AdminRooms = () => {
   const { lang } = useI18n();
   const queryClient = useQueryClient();
   const [selectedHotel, setSelectedHotel] = useState<string>("all");
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Tables<"room_categories"> | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({
     hotel_id: "", name_ar: "", name_en: "", price_per_night: 0, max_guests: 2, total_rooms: 1,
   });
@@ -25,29 +24,26 @@ const AdminRooms = () => {
   const { data: hotels } = useQuery({
     queryKey: ["admin-hotels-list"],
     queryFn: async () => {
-      const { data } = await supabase.from("hotels").select("id, name_ar, name_en");
-      return data ?? [];
+      const response: any = await apiClient.get("/api/hotels");
+      return response.data ?? [];
     },
   });
 
   const { data: rooms, isLoading } = useQuery({
     queryKey: ["admin-rooms", selectedHotel],
     queryFn: async () => {
-      let q = supabase.from("room_categories").select("*, hotels(name_ar, name_en)").order("price_per_night");
-      if (selectedHotel !== "all") q = q.eq("hotel_id", selectedHotel);
-      const { data } = await q;
-      return data ?? [];
+      const params = selectedHotel !== "all" ? { hotel_id: selectedHotel } : {};
+      const response: any = await apiClient.get("/api/rooms", params);
+      return response.data ?? [];
     },
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (editing) {
-        const { error } = await supabase.from("room_categories").update(form).eq("id", editing.id);
-        if (error) throw error;
+        await apiClient.put(`/api/rooms/${editing.id}`, form);
       } else {
-        const { error } = await supabase.from("room_categories").insert(form);
-        if (error) throw error;
+        await apiClient.post("/api/rooms", form);
       }
     },
     onSuccess: () => {
@@ -61,8 +57,7 @@ const AdminRooms = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("room_categories").delete().eq("id", id);
-      if (error) throw error;
+      await apiClient.delete(`/api/rooms/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-rooms"] });
@@ -72,8 +67,7 @@ const AdminRooms = () => {
 
   const updateAvailability = useMutation({
     mutationFn: async ({ id, total_rooms }: { id: string; total_rooms: number }) => {
-      const { error } = await supabase.from("room_categories").update({ total_rooms }).eq("id", id);
-      if (error) throw error;
+      await apiClient.put(`/api/rooms/${id}`, { total_rooms });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-rooms"] });
@@ -164,9 +158,9 @@ const AdminRooms = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {rooms?.map((room) => (
+                  {rooms?.map((room: any) => (
                     <tr key={room.id} className="hover:bg-muted/50">
-                      <td className="p-3 text-foreground font-medium">{lang === "ar" ? (room.hotels as any)?.name_ar : (room.hotels as any)?.name_en}</td>
+                      <td className="p-3 text-foreground font-medium">{lang === "ar" ? room.hotel_name_ar : room.hotel_name_en}</td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <BedDouble className="w-4 h-4 text-muted-foreground" />

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -26,12 +26,9 @@ const AdminManagers = () => {
   // Fetch hotels directly with useEffect to avoid RLS timing issues
   useEffect(() => {
     const fetchHotels = async () => {
-      const { data, error } = await supabase
-        .from("hotels")
-        .select("id, name_ar, name_en")
-        .order("name_en");
-      if (!error && data) {
-        setHotelsList(data);
+      const response: any = await apiClient.get("/api/hotels");
+      if (response.data) {
+        setHotelsList(response.data);
       }
     };
     fetchHotels();
@@ -40,47 +37,19 @@ const AdminManagers = () => {
   const { data: managers, isLoading } = useQuery({
     queryKey: ["admin-managers"],
     queryFn: async () => {
-      const { data: roles, error } = await supabase
-        .from("user_roles")
-        .select("*")
-        .eq("role", "hotel_manager");
-      if (error) throw error;
-      if (!roles?.length) return [];
-
-      const userIds = roles.map(r => r.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email")
-        .in("user_id", userIds);
-
-      const { data: hotels } = await supabase
-        .from("hotels")
-        .select("id, name_ar, name_en, city, stars, is_active, cover_image, manager_id")
-        .in("manager_id", userIds);
-
-      return roles.map(r => ({
-        ...r,
-        profile: profiles?.find(p => p.user_id === r.user_id) ?? null,
-        hotel: hotels?.find(h => h.manager_id === r.user_id) ?? null,
-      }));
+      const response: any = await apiClient.get("/api/admin/managers");
+      return response.data ?? [];
     },
   });
 
   const createManager = useMutation({
     mutationFn: async () => {
-      const { data: sessionData, error: sessionError } = await (supabase.auth as any).getSession();
-      if (sessionError) throw new Error(sessionError.message);
-
-      const token = sessionData?.session?.access_token;
-      if (!token) throw new Error(lang === "ar" ? "انتهت الجلسة، يرجى تسجيل الدخول مجددًا" : "Session expired. Please sign in again.");
-
-      const res = await supabase.functions.invoke("create-manager", {
-        body: { email, password, full_name: fullName, hotel_id: hotelId || null },
-        headers: { Authorization: `Bearer ${token}` },
+      await apiClient.post("/api/admin/managers", {
+        email,
+        password,
+        full_name: fullName,
+        hotel_id: hotelId || null
       });
-
-      if (res.error) throw new Error(res.error.message || (lang === "ar" ? "فشل إنشاء المدير" : "Failed to create manager"));
-      if (res.data?.error) throw new Error(res.data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-managers"] });
@@ -93,8 +62,7 @@ const AdminManagers = () => {
 
   const removeManager = useMutation({
     mutationFn: async (roleId: string) => {
-      const { error } = await supabase.from("user_roles").delete().eq("id", roleId);
-      if (error) throw error;
+      await apiClient.delete(`/api/admin/managers/${roleId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-managers"] });
@@ -113,8 +81,8 @@ const AdminManagers = () => {
             setOpen(v);
             if (v) {
               // Refresh hotels list when dialog opens
-              supabase.from("hotels").select("id, name_ar, name_en").order("name_en")
-                .then(({ data }) => { if (data) setHotelsList(data); });
+              apiClient.get("/api/hotels")
+                .then((response: any) => { if (response.data) setHotelsList(response.data); });
             }
           }}>
             <DialogTrigger asChild>
@@ -154,7 +122,7 @@ const AdminManagers = () => {
                         <SelectValue placeholder={lang === "ar" ? "اختر فندق" : "Select hotel"} />
                       </SelectTrigger>
                       <SelectContent className="z-[300]">
-                        {hotelsList.map((h) => (
+                        {hotelsList.map((h: any) => (
                           <SelectItem key={h.id} value={h.id}>
                             {lang === "ar" ? (h.name_ar || h.name_en) : (h.name_en || h.name_ar)}
                           </SelectItem>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,16 +21,16 @@ const HotelRoomsTab = ({ hotelId }: { hotelId: string }) => {
   const { data: rooms, isLoading } = useQuery({
     queryKey: ["hotel-rooms", hotelId],
     queryFn: async () => {
-      const { data } = await supabase.from("room_categories").select("*").eq("hotel_id", hotelId).order("price_per_night");
-      return data ?? [];
+      const response: any = await apiClient.get("/api/rooms", { hotel_id: hotelId });
+      return response.data ?? [];
     },
   });
 
   const { data: syncSettings } = useQuery({
     queryKey: ["hotel-sync", hotelId],
     queryFn: async () => {
-      const { data } = await supabase.from("local_sync_settings").select("*").eq("hotel_id", hotelId).maybeSingle();
-      return data;
+      const response: any = await apiClient.get(`/api/admin/sync-settings/${hotelId}`);
+      return response.data;
     },
   });
 
@@ -38,11 +38,9 @@ const HotelRoomsTab = ({ hotelId }: { hotelId: string }) => {
     mutationFn: async () => {
       const payload = { ...form, hotel_id: hotelId };
       if (editing) {
-        const { error } = await supabase.from("room_categories").update(payload).eq("id", editing.id);
-        if (error) throw error;
+        await apiClient.put(`/api/rooms/${editing.id}`, payload);
       } else {
-        const { error } = await supabase.from("room_categories").insert(payload);
-        if (error) throw error;
+        await apiClient.post("/api/rooms", payload);
       }
     },
     onSuccess: () => {
@@ -56,8 +54,7 @@ const HotelRoomsTab = ({ hotelId }: { hotelId: string }) => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("room_categories").delete().eq("id", id);
-      if (error) throw error;
+      await apiClient.delete(`/api/rooms/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hotel-rooms", hotelId] });
@@ -149,7 +146,7 @@ const HotelRoomsTab = ({ hotelId }: { hotelId: string }) => {
         </div>
       ) : (
         <div className="grid gap-3">
-          {rooms?.map((room) => (
+          {rooms?.map((room: any) => (
             <div key={room.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">

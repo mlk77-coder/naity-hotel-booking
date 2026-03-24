@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Input } from "@/components/ui/input";
@@ -32,15 +32,13 @@ const AdminBookings = () => {
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["admin-bookings", statusFilter, paymentFilter],
     queryFn: async () => {
-      let q = supabase
-        .from("bookings")
-        .select("*, hotels(name_ar, name_en), room_categories(name_ar, name_en)")
-        .order("created_at", { ascending: false });
-      if (statusFilter !== "all") q = q.eq("status", statusFilter);
-      if (paymentFilter !== "all") q = q.eq("payment_status", paymentFilter);
-      const { data, error } = await q;
-      if (error) throw error;
-      return data;
+      const params: any = {};
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (paymentFilter !== "all") params.payment_status = paymentFilter;
+      
+      const response: any = await apiClient.get('/api/bookings', params);
+      if (!response.success) throw new Error(response.message);
+      return response.data;
     },
   });
 
@@ -132,7 +130,7 @@ const AdminBookings = () => {
                         <div className="font-medium text-foreground">{b.guest_first_name} {b.guest_last_name}</div>
                         <div className="text-xs text-muted-foreground">{b.guest_email}</div>
                       </td>
-                      <td className="p-3 text-foreground">{lang === "ar" ? (b.hotels as any)?.name_ar : (b.hotels as any)?.name_en}</td>
+                      <td className="p-3 text-foreground">{lang === "ar" ? b.hotel_name_ar : b.hotel_name_en}</td>
                       <td className="p-3 text-foreground">{b.check_in}</td>
                       <td className="p-3 font-semibold text-foreground">${b.total_price}</td>
                       <td className="p-3">

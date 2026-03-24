@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,9 +20,8 @@ const AdminHotelDetail = () => {
   const { data: hotel, isLoading } = useQuery({
     queryKey: ["admin-hotel-detail", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("hotels").select("*").eq("id", id!).single();
-      if (error) throw error;
-      return data;
+      const response: any = await apiClient.get(`/api/hotels/${id}`);
+      return response.data.hotel;
     },
     enabled: !!id,
   });

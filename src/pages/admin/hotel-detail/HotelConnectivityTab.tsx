@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,45 +14,33 @@ const HotelConnectivityTab = ({ hotelId }: { hotelId: string }) => {
   const queryClient = useQueryClient();
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-  const apiBaseUrl = `${SUPABASE_URL}/functions/v1`;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+  const apiBaseUrl = `${API_BASE_URL}/api`;
 
   const { data: syncSettings, isLoading } = useQuery({
     queryKey: ["hotel-sync-settings", hotelId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("local_sync_settings")
-        .select("*")
-        .eq("hotel_id", hotelId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      const response: any = await apiClient.get(`/api/admin/sync-settings/${hotelId}`);
+      return response.data;
     },
   });
 
   const { data: syncHistory } = useQuery({
     queryKey: ["hotel-sync-history", hotelId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sync_history")
-        .select("*")
-        .eq("hotel_id", hotelId)
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data ?? [];
+      const response: any = await apiClient.get(`/api/admin/sync-history/${hotelId}`);
+      return response.data ?? [];
     },
   });
 
   const createSettingsMutation = useMutation({
     mutationFn: async () => {
       const key = crypto.randomUUID();
-      const { error } = await supabase.from("local_sync_settings").insert({
+      await apiClient.post("/api/admin/sync-settings", {
         hotel_id: hotelId,
         secret_key: key,
         is_active: true,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hotel-sync-settings", hotelId] });
@@ -63,11 +51,9 @@ const HotelConnectivityTab = ({ hotelId }: { hotelId: string }) => {
 
   const toggleActiveMutation = useMutation({
     mutationFn: async (active: boolean) => {
-      const { error } = await supabase
-        .from("local_sync_settings")
-        .update({ is_active: active })
-        .eq("hotel_id", hotelId);
-      if (error) throw error;
+      await apiClient.put(`/api/admin/sync-settings/${hotelId}`, {
+        is_active: active
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hotel-sync-settings", hotelId] });
@@ -78,11 +64,9 @@ const HotelConnectivityTab = ({ hotelId }: { hotelId: string }) => {
   const regenerateKeyMutation = useMutation({
     mutationFn: async () => {
       const key = crypto.randomUUID();
-      const { error } = await supabase
-        .from("local_sync_settings")
-        .update({ secret_key: key })
-        .eq("hotel_id", hotelId);
-      if (error) throw error;
+      await apiClient.put(`/api/admin/sync-settings/${hotelId}`, {
+        secret_key: key
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hotel-sync-settings", hotelId] });

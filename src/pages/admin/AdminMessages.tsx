@@ -5,7 +5,7 @@ import {
   Trash2, ChevronDown, ChevronUp,
   Search, RefreshCw
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import AdminLayout from "./AdminLayout";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -60,12 +60,16 @@ export default function AdminMessages() {
 
   const fetchMessages = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("contact_messages")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setMessages((data as ContactMessage[]) ?? []);
-    setLoading(false);
+    try {
+      const response: any = await apiClient.get('/api/contact');
+      if (response.success) {
+        setMessages((response.data as ContactMessage[]) ?? []);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -89,18 +93,18 @@ export default function AdminMessages() {
   });
 
   const markRead = async (id: string, val: boolean) => {
-    await supabase.from("contact_messages").update({ is_read: val }).eq("id", id);
+    await apiClient.patch(`/api/contact/${id}/read`, { is_read: val });
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, is_read: val } : m)));
   };
 
   const toggleStar = async (id: string, val: boolean) => {
-    await supabase.from("contact_messages").update({ is_starred: val }).eq("id", id);
+    await apiClient.patch(`/api/contact/${id}/star`, { is_starred: val });
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, is_starred: val } : m)));
   };
 
   const deleteMsg = async (id: string) => {
     if (!confirm(tx("هل تريد حذف هذه الرسالة؟", "Delete this message?"))) return;
-    await supabase.from("contact_messages").delete().eq("id", id);
+    await apiClient.delete(`/api/contact/${id}`);
     setMessages((prev) => prev.filter((m) => m.id !== id));
     toast.success(tx("تم الحذف", "Deleted"));
   };

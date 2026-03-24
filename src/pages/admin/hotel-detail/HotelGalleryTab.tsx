@@ -1,11 +1,10 @@
 import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Upload, Trash2, Star, ImagePlus } from "lucide-react";
-import type { Tables } from "@/integrations/supabase/types";
 
 const HotelGalleryTab = ({ hotelId }: { hotelId: string }) => {
   const { lang } = useI18n();
@@ -16,16 +15,16 @@ const HotelGalleryTab = ({ hotelId }: { hotelId: string }) => {
   const { data: photos } = useQuery({
     queryKey: ["hotel-photos", hotelId],
     queryFn: async () => {
-      const { data } = await supabase.from("hotel_photos").select("*").eq("hotel_id", hotelId).order("sort_order");
-      return data ?? [];
+      const response: any = await apiClient.get(`/api/hotels/${hotelId}/photos`);
+      return response.data ?? [];
     },
   });
 
   const { data: hotel } = useQuery({
     queryKey: ["hotel-cover", hotelId],
     queryFn: async () => {
-      const { data } = await supabase.from("hotels").select("cover_image").eq("id", hotelId).single();
-      return data;
+      const response: any = await apiClient.get(`/api/hotels/${hotelId}`);
+      return response.data.hotel;
     },
   });
 
@@ -35,13 +34,16 @@ const HotelGalleryTab = ({ hotelId }: { hotelId: string }) => {
 
     for (const file of fileArr) {
       if (!file.type.startsWith("image/")) continue;
-      const ext = file.name.split(".").pop();
-      const path = `${hotelId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("hotel-photos").upload(path, file);
-      if (uploadError) { toast.error(uploadError.message); continue; }
-
-      const { data: { publicUrl } } = supabase.storage.from("hotel-photos").getPublicUrl(path);
-      await supabase.from("hotel_photos").insert({ hotel_id: hotelId, url: publicUrl, sort_order: (photos?.length ?? 0) });
+      
+      const formData = new FormData();
+      formData.append("photo", file);
+      formData.append("hotel_id", hotelId);
+      
+      try {
+        await apiClient.upload(`/api/hotels/${hotelId}/photos`, formData);
+      } catch (error: any) {
+        toast.error(error.message);
+      }
     }
 
     queryClient.invalidateQueries({ queryKey: ["hotel-photos", hotelId] });
@@ -59,16 +61,14 @@ const HotelGalleryTab = ({ hotelId }: { hotelId: string }) => {
     if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
   }, [photos]);
 
-  const deletePhoto = async (photo: Tables<"hotel_photos">) => {
-    const urlParts = photo.url.split("/hotel-photos/");
-    if (urlParts[1]) await supabase.storage.from("hotel-photos").remove([urlParts[1]]);
-    await supabase.from("hotel_photos").delete().eq("id", photo.id);
+  const deletePhoto = async (photo: any) => {
+    await apiClient.delete(`/api/hotels/${hotelId}/photos/${photo.id}`);
     queryClient.invalidateQueries({ queryKey: ["hotel-photos", hotelId] });
     toast.success(lang === "ar" ? "تم حذف الصورة" : "Photo deleted");
   };
 
   const setAsMain = async (url: string) => {
-    await supabase.from("hotels").update({ cover_image: url }).eq("id", hotelId);
+    await apiClient.put(`/api/hotels/${hotelId}`, { cover_image: url });
     queryClient.invalidateQueries({ queryKey: ["hotel-cover", hotelId] });
     queryClient.invalidateQueries({ queryKey: ["admin-hotel-detail", hotelId] });
     toast.success(lang === "ar" ? "تم تعيين صورة الغلاف" : "Main image set");

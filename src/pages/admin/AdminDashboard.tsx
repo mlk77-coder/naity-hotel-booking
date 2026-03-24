@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Hotel, BookOpen, Users, DollarSign, CalendarCheck, Activity, AlertTriangle, TrendingUp } from "lucide-react";
@@ -29,49 +29,70 @@ const AdminDashboard = () => {
   const { data: stats } = useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: async () => {
-      const [hotelsRes, bookingsRes, managersRes, todayCheckIns, depositsRes, pendingSyncRes] = await Promise.all([
-        supabase.from("hotels").select("*", { count: "exact", head: true }),
-        supabase.from("bookings").select("*", { count: "exact", head: true }),
-        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "hotel_manager"),
-        supabase.from("bookings").select("*", { count: "exact", head: true }).eq("check_in", today),
-        supabase.from("bookings").select("deposit_amount"),
-        supabase.from("bookings").select("*", { count: "exact", head: true }).eq("sync_status", "pending"),
-      ]);
-
-      const totalDeposits = depositsRes.data?.reduce((sum, b) => sum + (Number(b.deposit_amount) || 0), 0) ?? 0;
-
-      return {
-        hotels: hotelsRes.count ?? 0,
-        bookings: bookingsRes.count ?? 0,
-        managers: managersRes.count ?? 0,
-        todayCheckIns: todayCheckIns.count ?? 0,
-        totalDeposits,
-        pendingSync: pendingSyncRes.count ?? 0,
-      };
+      try {
+        const response: any = await apiClient.get('/api/admin/stats');
+        if (response.success && response.data) {
+          const { overview } = response.data;
+          return {
+            hotels: overview?.total_hotels ?? 0,
+            bookings: overview?.total_bookings ?? 0,
+            managers: overview?.total_managers ?? 0,
+            todayCheckIns: overview?.today_checkins ?? 0,
+            totalDeposits: overview?.total_deposits ?? 0,
+            pendingSync: overview?.pending_sync ?? 0,
+          };
+        }
+        return {
+          hotels: 0,
+          bookings: 0,
+          managers: 0,
+          todayCheckIns: 0,
+          totalDeposits: 0,
+          pendingSync: 0,
+        };
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        return {
+          hotels: 0,
+          bookings: 0,
+          managers: 0,
+          todayCheckIns: 0,
+          totalDeposits: 0,
+          pendingSync: 0,
+        };
+      }
     },
   });
 
   const { data: recentBookings } = useQuery({
     queryKey: ["admin-recent-bookings"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("bookings")
-        .select("*, hotels(name_ar, name_en)")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      return data ?? [];
+      try {
+        const response: any = await apiClient.get('/api/admin/stats');
+        if (response.success && response.data?.recent_bookings) {
+          return response.data.recent_bookings;
+        }
+        return [];
+      } catch (error) {
+        console.error('Error fetching recent bookings:', error);
+        return [];
+      }
     },
   });
 
   const { data: recentLogs } = useQuery({
     queryKey: ["admin-recent-logs"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("webhook_logs")
-        .select("*, hotels(name_ar, name_en)")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      return data ?? [];
+      try {
+        const response: any = await apiClient.get('/api/admin/webhook-logs', { limit: 5 });
+        if (response.success && response.data) {
+          return response.data;
+        }
+        return [];
+      } catch (error) {
+        console.error('Error fetching webhook logs:', error);
+        return [];
+      }
     },
   });
 
@@ -122,12 +143,12 @@ const AdminDashboard = () => {
                   {lang === "ar" ? "لا توجد حجوزات" : "No bookings yet"}
                 </p>
               )}
-              {recentBookings?.map((b) => (
+              {recentBookings?.map((b: any) => (
                 <div key={b.id} className="p-4 flex items-center justify-between">
                   <div>
                     <p className="font-medium text-foreground text-sm">{b.guest_first_name} {b.guest_last_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {lang === "ar" ? (b.hotels as any)?.name_ar : (b.hotels as any)?.name_en} • {b.check_in}
+                      {lang === "ar" ? b.hotel_name_ar : b.hotel_name_en} • {b.check_in}
                     </p>
                   </div>
                   <div className="text-end">
@@ -155,12 +176,12 @@ const AdminDashboard = () => {
                   {lang === "ar" ? "لا توجد سجلات مزامنة بعد" : "No sync logs yet"}
                 </p>
               )}
-              {recentLogs?.map((log) => (
+              {recentLogs?.map((log: any) => (
                 <div key={log.id} className="p-4 flex items-center justify-between">
                   <div>
                     <p className="font-medium text-foreground text-sm">{log.event_type}</p>
                     <p className="text-xs text-muted-foreground">
-                      {lang === "ar" ? (log.hotels as any)?.name_ar : (log.hotels as any)?.name_en}
+                      {lang === "ar" ? log.hotel_name_ar : log.hotel_name_en}
                     </p>
                   </div>
                   <div className="text-end">

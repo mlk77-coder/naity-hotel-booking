@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Search, Calendar, MapPin, Star, Users,
          ChevronDown, ChevronUp, Copy, Check, AlertTriangle, XCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
@@ -216,13 +216,15 @@ export default function MyBookings() {
     }
     setLoading(true); setBookings(null);
     try {
-      const { data, error } = await supabase.functions.invoke("get-bookings-by-email", {
-        body: { email: trimmed },
-      });
-      if (error) throw error;
-      const bookingsData = data?.bookings ?? [];
-      setBookings(bookingsData);
+      const response: any = await apiClient.get('/api/bookings/by-email', { email: trimmed });
+      if (response.success) {
+        const bookingsData = response.data ?? [];
+        setBookings(bookingsData);
+      } else {
+        throw new Error(response.message || 'Failed to fetch bookings');
+      }
     } catch (err: any) {
+      console.error('Error fetching bookings:', err);
       toast.error(err.message ?? tx("حدث خطأ", "An error occurred"));
     } finally { setLoading(false); }
   };
@@ -239,11 +241,17 @@ export default function MyBookings() {
     setLoadingPolicy(true);
     setPolicy(null);
     try {
-      const { data } = await supabase.functions.invoke("get-cancellation-policy", {
-        body: { check_in: booking.check_in, deposit_amount: booking.deposit_amount },
+      const response: any = await apiClient.get('/api/bookings/cancellation-policy', {
+        check_in: booking.check_in,
+        deposit_amount: booking.deposit_amount
       });
-      setPolicy(data);
-    } catch { toast.error("Failed to load policy"); }
+      if (response.success) {
+        setPolicy(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading policy:', error);
+      toast.error("Failed to load policy");
+    }
     setLoadingPolicy(false);
   };
 
@@ -251,14 +259,16 @@ export default function MyBookings() {
     if (!cancellingBooking) return;
     setCancelling(true);
     try {
-      const { data, error } = await supabase.functions.invoke("guest-cancel-booking", {
-        body: { booking_id: cancellingBooking.id, guest_email: cancellingBooking.guest_email },
+      const response: any = await apiClient.post('/api/bookings/cancel', {
+        booking_id: cancellingBooking.id,
+        guest_email: cancellingBooking.guest_email
       });
-      if (error || !data?.success) throw new Error(error?.message ?? "Failed");
+      if (!response.success) throw new Error(response.message ?? "Failed");
+      const refundAmount = response.data?.refunded ?? 0;
       setCancellingBooking(null);
       queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
-      toast.success(data.refunded > 0
-        ? `Booking cancelled. Refund of $${data.refunded} in 5-10 business days.`
+      toast.success(refundAmount > 0
+        ? `Booking cancelled. Refund of $${refundAmount} in 5-10 business days.`
         : "Booking cancelled. No refund applies.");
       handleSearch();
     } catch (e: any) { toast.error(e.message); }

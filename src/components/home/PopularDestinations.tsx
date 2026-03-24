@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 
 import damascusImg from "@/assets/cities/damascus.jpg";
 import aleppoImg from "@/assets/cities/aleppo.jpg";
@@ -27,11 +27,15 @@ const PopularDestinations = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.from("hotels").select("city").eq("is_active", true);
-      if (data) {
-        const map: Record<string, number> = {};
-        data.forEach((h) => { map[h.city] = (map[h.city] || 0) + 1; });
-        setCounts(map);
+      try {
+        const response: any = await apiClient.get("/api/hotels", { is_active: true });
+        if (response.data) {
+          const map: Record<string, number> = {};
+          response.data.forEach((h: any) => { map[h.city] = (map[h.city] || 0) + 1; });
+          setCounts(map);
+        }
+      } catch (error) {
+        console.error("Error loading city counts:", error);
       }
     };
     load();

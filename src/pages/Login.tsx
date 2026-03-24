@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,32 +21,38 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await signIn(email, password);
-    if (error) {
-      setIsLoading(false);
-      toast.error(error.message);
-      return;
-    }
-
-    // Check if partner user → redirect to /partner
-    const { data: { user } } = await (supabase.auth as any).getUser();
-    if (user) {
-      const { data: partnerRow } = await supabase
-        .from("partner_users")
-        .select("partner_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (partnerRow) {
-        setIsLoading(false);
-        toast.success("تم تسجيل الدخول بنجاح");
-        navigate("/partner");
+    
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        toast.error(error.message);
         return;
       }
-    }
 
-    setIsLoading(false);
-    toast.success("تم تسجيل الدخول بنجاح");
-    navigate("/dashboard");
+      // Check if partner user → redirect to /partner
+      try {
+        const response = await apiClient.get('/api/auth/me');
+        if (response.success && response.data) {
+          // Check if user is a partner
+          const partnerResponse: any = await apiClient.get('/api/partner/check');
+          if (partnerResponse.success && partnerResponse.is_partner) {
+            toast.success("تم تسجيل الدخول بنجاح");
+            navigate("/partner");
+            return;
+          }
+        }
+      } catch (err) {
+        // Not a partner, continue to dashboard
+      }
+
+      toast.success("تم تسجيل الدخول بنجاح");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error(error.message || "فشل تسجيل الدخول");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

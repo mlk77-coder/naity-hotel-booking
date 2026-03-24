@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
@@ -45,32 +45,11 @@ const ROLE_OPTIONS = [
 ] as const;
 
 const callManageUser = async (body: Record<string, unknown>) => {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData?.session?.access_token;
-  if (!token) throw new Error("Not authenticated");
-
-  const { data, error } = await supabase.functions.invoke("manage-admin-user", {
-    body,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (error) {
-    const response = (error as { context?: Response }).context;
-    if (response) {
-      try {
-        const payload = await response.clone().json();
-        if (payload?.error) throw new Error(payload.error);
-      } catch {
-        // Fallback to generic message below
-      }
-    }
-    throw new Error(error.message || "Request failed");
+  const response: any = await apiClient.post('/api/admin/users/manage', body);
+  if (!response.success) {
+    throw new Error(response.message || "Request failed");
   }
-
-  if (data?.error) throw new Error(data.error);
-  return data;
+  return response.data;
 };
 
 const AdminUsers = () => {

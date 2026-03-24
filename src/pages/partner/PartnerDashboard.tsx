@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,51 +73,45 @@ const PartnerDashboard = () => {
     if (!user) return;
     (async () => {
       setLoading(true);
-      // 1. Get partner link
-      const { data: pu } = await supabase
-        .from("partner_users")
-        .select("partner_id, tech_partners(id, name, name_ar, commission_rate)")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      try {
+        // 1. Get partner info and hotels
+        const response: any = await apiClient.get("/api/partner/dashboard");
+        
+        if (!response.data?.partner) {
+          setUnauthorized(true);
+          setLoading(false);
+          return;
+        }
 
-      if (!pu || !pu.tech_partners) {
+        const tp = response.data.partner;
+        setPartner(tp);
+
+        const hList = response.data.hotels ?? [];
+        setHotels(hList);
+
+        if (!hList.length) {
+          setLoading(false);
+          setNoHotels(true);
+          return;
+        }
+
+        // 2. Get bookings with date range
+        const dr = getDateRange();
+        const params: any = {};
+        if (dr) {
+          params.from = dr.from;
+          params.to = dr.to;
+        }
+
+        const bookingsResponse: any = await apiClient.get("/api/partner/bookings", params);
+        setBookings(bookingsResponse.data ?? []);
+        setPage(0);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading partner dashboard:", error);
         setUnauthorized(true);
         setLoading(false);
-        return;
       }
-
-      const tp = pu.tech_partners as any;
-      setPartner(tp);
-
-      // 2. Hotels
-      const { data: hData } = await supabase
-        .from("hotels")
-        .select("id, name_ar, name_en, city")
-        .eq("tech_partner_id", tp.id)
-        .eq("is_active", true);
-      const hList = hData ?? [];
-      setHotels(hList);
-
-      if (!hList.length) { setLoading(false); setNoHotels(true); return; }
-
-      // 3. Bookings
-      const hotelIds = hList.map(h => h.id);
-      let q = supabase
-        .from("bookings")
-        .select("id, created_at, check_in, check_out, guests_count, deposit_amount, total_price, status, guest_first_name, guest_last_name, guest_email, guest_phone, hotel_id, room_category_id, hotels(name_ar, name_en), room_categories(name_ar, name_en)")
-        .in("hotel_id", hotelIds)
-        .in("status", ["confirmed", "active", "completed", "checked_in"])
-        .order("created_at", { ascending: false });
-
-      const dr = getDateRange();
-      if (dr) {
-        q = q.gte("created_at", dr.from).lte("created_at", dr.to);
-      }
-
-      const { data: bData } = await q;
-      setBookings(bData ?? []);
-      setPage(0);
-      setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, range, customFrom, customTo]);
@@ -127,7 +121,7 @@ const PartnerDashboard = () => {
   const filtered = useMemo(() => {
     if (!searchQ.trim()) return bookings;
     const q = searchQ.toLowerCase();
-    return bookings.filter(b =>
+    return bookings.filter((b: any) =>
       `${b.guest_first_name} ${b.guest_last_name}`.toLowerCase().includes(q) ||
       b.guest_email?.toLowerCase().includes(q)
     );
@@ -136,8 +130,8 @@ const PartnerDashboard = () => {
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
-  const totalDeposit = bookings.reduce((s, b) => s + (b.deposit_amount ?? 0), 0);
-  const totalGuests = bookings.reduce((s, b) => s + (b.guests_count ?? 0), 0);
+  const totalDeposit = bookings.reduce((s: number, b: any) => s + (b.deposit_amount ?? 0), 0);
+  const totalGuests = bookings.reduce((s: number, b: any) => s + (b.guests_count ?? 0), 0);
   const myEarnings = totalDeposit * commissionRate / 100;
 
   // Hotels breakdown
@@ -147,9 +141,10 @@ const PartnerDashboard = () => {
       map[h.id] = { name: lang === "ar" ? h.name_ar : h.name_en, city: h.city, count: 0, deposit: 0 };
     }
     for (const b of bookings) {
-      if (map[b.hotel_id]) {
-        map[b.hotel_id].count += 1;
-        map[b.hotel_id].deposit += b.deposit_amount ?? 0;
+      const booking = b as any;
+      if (map[booking.hotel_id]) {
+        map[booking.hotel_id].count += 1;
+        map[booking.hotel_id].deposit += booking.deposit_amount ?? 0;
       }
     }
     return Object.values(map);
@@ -171,9 +166,9 @@ const PartnerDashboard = () => {
       lang === "ar" ? "مستحقاتك ($)" : "Your Earnings ($)",
       lang === "ar" ? "الحالة" : "Status",
     ];
-    const rows = filtered.map(b => {
-      const hotel = b.hotels as any;
-      const room = b.room_categories as any;
+    const rows = filtered.map((b: any) => {
+      const hotel = b.hotel_name_ar && b.hotel_name_en ? { name_ar: b.hotel_name_ar, name_en: b.hotel_name_en } : null;
+      const room = b.room_name_ar && b.room_name_en ? { name_ar: b.room_name_ar, name_en: b.room_name_en } : null;
       return [
         formatDate(b.created_at),
         `${b.guest_first_name} ${b.guest_last_name}`,
@@ -412,9 +407,9 @@ const PartnerDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
-                {paged.map(b => {
-                  const hotel = b.hotels as any;
-                  const room = b.room_categories as any;
+                {paged.map((b: any) => {
+                  const hotel = b.hotel_name_ar && b.hotel_name_en ? { name_ar: b.hotel_name_ar, name_en: b.hotel_name_en } : null;
+                  const room = b.room_name_ar && b.room_name_en ? { name_ar: b.room_name_ar, name_en: b.room_name_en } : null;
                   const dep = b.deposit_amount ?? 0;
                   return (
                     <tr key={b.id} className="hover:bg-muted/30 transition-colors">

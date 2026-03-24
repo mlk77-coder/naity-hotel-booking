@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, Building2, MapPin, Phone, Mail, User, MessageSquare } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -38,7 +38,7 @@ const Join = () => {
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("contact_messages").insert({
+      await apiClient.post("/api/contact", {
         full_name: form.full_name,
         phone: form.phone,
         email: form.email,
@@ -46,7 +46,6 @@ const Join = () => {
         subject: `Join Request — ${form.property_type === "apartment" ? "Apartment" : "Hotel"}`,
         message: `Property Type: ${form.property_type}\nCity: ${form.city}\n\n${form.message}`,
       });
-      if (error) throw error;
       setSubmitted(true);
       toast.success(tx("تم إرسال طلبك بنجاح!", "Your request has been submitted!"));
     } catch (err: any) {

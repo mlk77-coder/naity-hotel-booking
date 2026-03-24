@@ -2,7 +2,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import naityLogo from "@/assets/naity-logo.png";
 import {
   Hotel, Users, BookOpen, LogOut, LayoutDashboard, Settings,
@@ -18,11 +18,20 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    supabase
-      .from("contact_messages")
-      .select("id", { count: "exact", head: true })
-      .eq("is_read", false)
-      .then(({ count }) => setUnreadCount(count ?? 0));
+    // Fetch unread messages count
+    const fetchUnreadCount = async () => {
+      try {
+        const response: any = await apiClient.get('/api/contact');
+        if (response.success && response.data) {
+          const unread = response.data.filter((msg: any) => !msg.is_read).length;
+          setUnreadCount(unread);
+        }
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+    
+    fetchUnreadCount();
   }, []);
 
   const navItems = [

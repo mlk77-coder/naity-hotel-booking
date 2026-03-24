@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { SlidersHorizontal, Star, MapPin, X, Wifi, Zap as ZapIcon, PlaneTakeoff, UtensilsCrossed, Dumbbell } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -54,33 +54,54 @@ const HotelsListing = () => {
 
   useEffect(() => {
     const load = async () => {
-      const [hotelsRes, roomsRes, syncRes] = await Promise.all([
-        supabase.from("hotels").select("*").eq("is_active", true).in("city", ALLOWED_CITY_NAMES).order("created_at", { ascending: false }),
-        supabase.from("room_categories").select("hotel_id, price_per_night").eq("is_active", true),
-        supabase.from("local_sync_settings").select("hotel_id, is_active, last_heartbeat_at"),
-      ]);
+      try {
+        // Get all hotels
+        const hotelsResponse: any = await apiClient.get('/api/hotels');
+        const hotelsData = hotelsResponse.success ? hotelsResponse.data : [];
+        
+        // Filter active hotels in allowed cities
+        const activeHotels = hotelsData.filter((h: any) => 
+          h.is_active && ALLOWED_CITY_NAMES.includes(h.city)
+        );
+        
+        setHotels(activeHotels);
 
-      if (hotelsRes.data) setHotels(hotelsRes.data);
-      if (roomsRes.data) {
+        // Get rooms to calculate min prices
+        const roomsResponse: any = await apiClient.get('/api/rooms');
+        const roomsData = roomsResponse.success ? roomsResponse.data : [];
+        
         const prices: Record<string, number> = {};
-        roomsRes.data.forEach((r: any) => {
-          if (!prices[r.hotel_id] || r.price_per_night < prices[r.hotel_id]) {
-            prices[r.hotel_id] = r.price_per_night;
+        roomsData.forEach((r: any) => {
+          if (r.is_active && r.hotel_id) {
+            if (!prices[r.hotel_id] || r.price_per_night < prices[r.hotel_id]) {
+              prices[r.hotel_id] = r.price_per_night;
+            }
           }
         });
         setMinPrices(prices);
-      }
-      if (syncRes.data) {
-        const statuses: Record<string, boolean> = {};
-        syncRes.data.forEach((s: any) => {
-          if (s.is_active && s.last_heartbeat_at) {
-            const diff = Date.now() - new Date(s.last_heartbeat_at).getTime();
-            statuses[s.hotel_id] = diff < 5 * 60 * 1000;
+
+        // Get sync statuses (optional - may not be available in API yet)
+        try {
+          const syncResponse: any = await apiClient.get('/api/admin/sync-settings');
+          if (syncResponse.success && syncResponse.data) {
+            const statuses: Record<string, boolean> = {};
+            syncResponse.data.forEach((s: any) => {
+              if (s.is_active && s.last_heartbeat_at) {
+                const diff = Date.now() - new Date(s.last_heartbeat_at).getTime();
+                statuses[s.hotel_id] = diff < 5 * 60 * 1000;
+              }
+            });
+            setSyncStatuses(statuses);
           }
-        });
-        setSyncStatuses(statuses);
+        } catch (err) {
+          // Sync settings endpoint may not exist yet, ignore error
+          console.log('Sync settings not available');
+        }
+      } catch (error) {
+        console.error('Error loading hotels:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     load();
   }, []);

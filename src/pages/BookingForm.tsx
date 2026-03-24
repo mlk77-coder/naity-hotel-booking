@@ -1,16 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Users, CreditCard,
          CheckCircle, FileText, Phone, Mail,
-         Globe, Shield, Calendar, MapPin, Minus, Plus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+         Globe, Shield, Calendar, Minus, Plus } from "lucide-react";
+import { apiClient } from "@/lib/apiClient";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
-import { format } from "date-fns";
-import type { Tables } from "@/integrations/supabase/types";
+import { isPeakSeason } from "@/lib/utils";
 
 const DEPOSIT_PERCENT = 10;
 
@@ -78,8 +77,6 @@ const NATIONALITIES = [
   { value: "Other",        labelAr: "أخرى",                labelEn: "Other" },
 ];
 
-import { isPeakSeason } from "@/lib/utils";
-
 const BookingForm = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -93,8 +90,8 @@ const BookingForm = () => {
   const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
 
   const [step, setStep] = useState<Step>("details");
-  const [hotel, setHotel] = useState<Tables<'hotels'> | null>(null);
-  const [room, setRoom] = useState<Tables<'room_categories'> | null>(null);
+  const [hotel, setHotel] = useState<any | null>(null);
+  const [room, setRoom] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Form state
@@ -137,16 +134,27 @@ const BookingForm = () => {
   useEffect(() => {
     if (!hotelId || !roomId) return;
     const load = async () => {
-      const [h, r] = await Promise.all([
-        supabase.from("hotels").select("*").eq("id", hotelId).single(),
-        supabase.from("room_categories").select("*").eq("id", roomId).single(),
-      ]);
-      setHotel(h.data);
-      setRoom(r.data);
-      setLoading(false);
+      try {
+        // Get hotel details
+        const hotelResponse: any = await apiClient.get(`/api/hotels/${hotelId}`);
+        if (hotelResponse.success && hotelResponse.data) {
+          setHotel(hotelResponse.data.hotel);
+        }
+
+        // Get room details
+        const roomResponse: any = await apiClient.get(`/api/rooms/${roomId}`);
+        if (roomResponse.success && roomResponse.data) {
+          setRoom(roomResponse.data);
+        }
+      } catch (error) {
+        console.error('Error loading booking data:', error);
+        toast.error(tx("حدث خطأ في تحميل البيانات", "Failed to load data"));
+      } finally {
+        setLoading(false);
+      }
     };
     load();
-  }, [hotelId, roomId]);
+  }, [hotelId, roomId, tx]);
 
   // Detect Stripe return
   useEffect(() => {
@@ -154,28 +162,32 @@ const BookingForm = () => {
     if (sessionId && step !== "voucher") {
       const fetchBooking = async () => {
         setLoading(true);
-        const { data } = await supabase
-          .from("bookings")
-          .select("*, hotels(*), room_categories(*)")
-          .eq("stripe_payment_id", sessionId)
-          .maybeSingle();
+        try {
+          const response: any = await apiClient.get('/api/bookings/by-session', {
+            session_id: sessionId
+          });
 
-        if (data) {
-          setBookingId(data.id);
-          setHotel(data.hotels);
-          setRoom(data.room_categories);
-          setFirstName(data.guest_first_name);
-          setLastName(data.guest_last_name);
-          setEmail(data.guest_email);
-          setCheckIn(data.check_in);
-          setCheckOut(data.check_out);
-          setStep("voucher");
+          if (response.success && response.data) {
+            const booking = response.data;
+            setBookingId(booking.id);
+            setHotel(booking.hotel);
+            setRoom(booking.room);
+            setFirstName(booking.guest_first_name);
+            setLastName(booking.guest_last_name);
+            setEmail(booking.guest_email);
+            setCheckIn(booking.check_in);
+            setCheckOut(booking.check_out);
+            setStep("voucher");
+          }
+        } catch (error) {
+          console.error('Error fetching booking:', error);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       };
       fetchBooking();
     }
-  }, []);
+  }, [step]);
 
   // Breakfast helpers
   const hotelData = hotel as any;
@@ -199,10 +211,21 @@ const BookingForm = () => {
 
   useEffect(() => {
     if (!needsExtraRoom || !hotel?.id || !room?.id) return;
-    supabase.from("room_categories").select("*")
-      .eq("hotel_id", hotel.id).eq("is_active", true)
-      .neq("id", room.id)
-      .then(({ data }) => setAvailableExtraRooms(data ?? []));
+    const loadExtraRooms = async () => {
+      try {
+        const response: any = await apiClient.get('/api/rooms', {
+          hotel_id: hotel.id,
+          exclude_id: room.id
+        });
+        if (response.success && response.data) {
+          const activeRooms = response.data.filter((r: any) => r.is_active);
+          setAvailableExtraRooms(activeRooms);
+        }
+      } catch (error) {
+        console.error('Error loading extra rooms:', error);
+      }
+    };
+    loadExtraRooms();
   }, [needsExtraRoom, hotel?.id, room?.id]);
 
   // Price calculations
@@ -220,40 +243,41 @@ const BookingForm = () => {
     setProcessing(true);
     try {
       const fullPhone = `${phoneCode}${phone}`;
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: {
-          hotel_id: hotelId,
-          room_category_id: roomId,
-          guest_first_name: firstName,
-          guest_last_name: lastName,
-          guest_email: email,
-          guest_phone: fullPhone,
-          nationality,
-          guests_count: effectiveAdults,
-          children_count: actualChildren,
-          children_ages: childrenAges,
-          breakfast_included: breakfastIncluded ?? false,
-          check_in: checkIn,
-          check_out: checkOut,
-          nights,
-          total_price: totalPrice,
-          deposit_amount: totalDeposit,
-          special_requests: specialRequests || null,
-          room_number: roomNumberParam || null,
-          hotel_name: lang === "ar" ? hotel?.name_ar : hotel?.name_en,
-          room_name: lang === "ar" ? room?.name_ar : room?.name_en,
-          extra_room: extraRoom ? {
-            room_category_id: extraRoom.id,
-            price_per_night: extraRoom.price_per_night,
-            deposit_amount: deposit2,
-          } : null,
-        },
+      const response: any = await apiClient.post('/api/bookings/create-checkout', {
+        hotel_id: hotelId,
+        room_category_id: roomId,
+        guest_first_name: firstName,
+        guest_last_name: lastName,
+        guest_email: email,
+        guest_phone: fullPhone,
+        nationality,
+        guests_count: effectiveAdults,
+        children_count: actualChildren,
+        children_ages: childrenAges,
+        breakfast_included: breakfastIncluded ?? false,
+        check_in: checkIn,
+        check_out: checkOut,
+        nights,
+        total_price: totalPrice,
+        deposit_amount: totalDeposit,
+        special_requests: specialRequests || null,
+        room_number: roomNumberParam || null,
+        hotel_name: lang === "ar" ? hotel?.name_ar : hotel?.name_en,
+        room_name: lang === "ar" ? room?.name_ar : room?.name_en,
+        extra_room: extraRoom ? {
+          room_category_id: extraRoom.id,
+          price_per_night: extraRoom.price_per_night,
+          deposit_amount: deposit2,
+        } : null,
       });
 
-      if (error) throw error;
-      if (!data?.url) throw new Error("No checkout URL");
-      window.location.href = data.url;
+      if (!response.success || !response.data?.url) {
+        throw new Error(response.message || "No checkout URL");
+      }
+      
+      window.location.href = response.data.url;
     } catch (err: any) {
+      console.error('Checkout error:', err);
       toast.error(err.message || tx("حدث خطأ", "An error occurred"));
       setProcessing(false);
     }

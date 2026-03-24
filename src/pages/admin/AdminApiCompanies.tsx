@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import AdminLayout from "./AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -140,23 +140,8 @@ export default function AdminApiCompanies() {
 
   const fetchCompanies = async () => {
     setLoading(true);
-    const { data: comps } = await supabase
-      .from("api_companies")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (!comps) { setLoading(false); return; }
-
-    const { data: hotels } = await supabase
-      .from("hotels")
-      .select("id, company_id");
-
-    const enriched = comps.map((c: any) => ({
-      ...c,
-      hotels_count: (hotels || []).filter((h: any) => h.company_id === c.id).length,
-    }));
-
-    setCompanies(enriched);
+    const response: any = await apiClient.get("/api/admin/api-companies");
+    setCompanies(response.data ?? []);
     setLoading(false);
   };
 
@@ -164,24 +149,16 @@ export default function AdminApiCompanies() {
 
   const fetchLogsForCompany = async (companyId: string) => {
     setSyncLogsLoading(true);
-    const { data } = await supabase
-      .from("api_sync_logs")
-      .select("*, api_companies(name)")
-      .eq("company_id", companyId)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setSyncLogs((data as unknown as SyncLog[]) || []);
+    const response: any = await apiClient.get(`/api/admin/api-companies/${companyId}/logs`);
+    setSyncLogs(response.data || []);
     setSyncLogsLoading(false);
   };
 
   const fetchHotelsForCompany = async (companyId: string) => {
     setHotelsLoading(true);
-    const [linkedRes, unlinkedRes] = await Promise.all([
-      supabase.from("hotels").select("id, name_en, name_ar, city, external_hotel_id").eq("company_id", companyId),
-      supabase.from("hotels").select("id, name_en, name_ar, city, external_hotel_id").is("company_id", null),
-    ]);
-    setLinkedHotels((linkedRes.data || []) as LinkedHotel[]);
-    setUnlinkedHotels((unlinkedRes.data || []) as LinkedHotel[]);
+    const response: any = await apiClient.get(`/api/admin/api-companies/${companyId}/hotels`);
+    setLinkedHotels(response.data?.linked || []);
+    setUnlinkedHotels(response.data?.unlinked || []);
     setHotelsLoading(false);
   };
 
@@ -236,21 +213,11 @@ export default function AdminApiCompanies() {
     };
 
     if (editingCompany) {
-      await supabase.from("api_companies").update(payload as any).eq("id", editingCompany.id);
+      await apiClient.put(`/api/admin/api-companies/${editingCompany.id}`, payload);
       toast({ title: isAr ? "تم تحديث الشركة" : "Company updated" });
     } else {
-      await supabase.from("api_companies").insert(payload as any);
+      await apiClient.post("/api/admin/api-companies", payload);
       toast({ title: isAr ? "تم إضافة الشركة" : "Company added" });
-      supabase.functions.invoke("send-admin-notification", {
-        body: {
-          type: "new_company",
-          data: {
-            name: form.name,
-            base_url: form.base_url,
-            auth_type: form.auth_type,
-          },
-        },
-      }).catch((e) => console.error("Company notification failed:", e));
     }
 
     setSaving(false);
@@ -260,7 +227,7 @@ export default function AdminApiCompanies() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await supabase.from("api_companies").delete().eq("id", deleteTarget.id);
+    await apiClient.delete(`/api/admin/api-companies/${deleteTarget.id}`);
     toast({ title: isAr ? "تم حذف الشركة" : "Company deleted" });
     setDeleteTarget(null);
     fetchCompanies();
@@ -270,14 +237,11 @@ export default function AdminApiCompanies() {
   const testConnection = async (c: ApiCompany) => {
     setTestingId(c.id);
     try {
-      const { data, error } = await supabase.functions.invoke("api-company-sync", {
-        body: { action: "test_connection", company_id: c.id },
-      });
-      if (error) throw error;
-      if (data?.success) {
+      const response: any = await apiClient.post(`/api/admin/api-companies/${c.id}/test`);
+      if (response.success) {
         toast({ title: isAr ? "✅ الاتصال ناجح" : "✅ Connection successful" });
       } else {
-        toast({ title: isAr ? "❌ فشل الاتصال" : "❌ Connection failed", description: data?.error, variant: "destructive" });
+        toast({ title: isAr ? "❌ فشل الاتصال" : "❌ Connection failed", description: response.error, variant: "destructive" });
       }
     } catch (e: any) {
       toast({ title: isAr ? "❌ خطأ" : "❌ Error", description: e.message, variant: "destructive" });
@@ -288,31 +252,18 @@ export default function AdminApiCompanies() {
   const syncAllHotels = async (c: ApiCompany) => {
     setSyncingId(c.id);
     try {
-      const { data: hotels } = await supabase
-        .from("hotels")
-        .select("id")
-        .eq("company_id", c.id);
-
-      if (!hotels?.length) {
-        toast({ title: isAr ? "لا توجد فنادق مرتبطة" : "No linked hotels", variant: "destructive" });
-        setSyncingId(null);
-        return;
-      }
-
-      let success = 0;
-      for (const hotel of hotels) {
-        const { data } = await supabase.functions.invoke("api-company-sync", {
-          body: { action: "sync_rooms", company_id: c.id, hotel_id: hotel.id },
+      const response: any = await apiClient.post(`/api/admin/api-companies/${c.id}/sync`);
+      
+      if (response.success) {
+        toast({
+          title: isAr
+            ? `✅ تمت المزامنة بنجاح`
+            : `✅ Sync completed successfully`,
         });
-        if (data?.success) success++;
+        fetchCompanies();
+      } else {
+        toast({ title: isAr ? "❌ فشلت المزامنة" : "❌ Sync failed", variant: "destructive" });
       }
-
-      toast({
-        title: isAr
-          ? `✅ تمت مزامنة ${success}/${hotels.length} فندق`
-          : `✅ Synced ${success}/${hotels.length} hotels`,
-      });
-      fetchCompanies();
     } catch (e: any) {
       toast({ title: isAr ? "❌ خطأ" : "❌ Error", description: e.message, variant: "destructive" });
     }
@@ -321,10 +272,10 @@ export default function AdminApiCompanies() {
 
   const linkHotel = async () => {
     if (!linkHotelId || !linkExternalId || !hotelsCompany) return;
-    await supabase
-      .from("hotels")
-      .update({ company_id: hotelsCompany.id, external_hotel_id: parseInt(linkExternalId) } as any)
-      .eq("id", linkHotelId);
+    await apiClient.post(`/api/admin/api-companies/${hotelsCompany.id}/link-hotel`, {
+      hotel_id: linkHotelId,
+      external_hotel_id: parseInt(linkExternalId)
+    });
     toast({ title: isAr ? "تم ربط الفندق" : "Hotel linked" });
     setLinkHotelId("");
     setLinkExternalId("");
@@ -334,10 +285,9 @@ export default function AdminApiCompanies() {
 
   const unlinkHotel = async (hotelId: string) => {
     if (!hotelsCompany) return;
-    await supabase
-      .from("hotels")
-      .update({ company_id: null, external_hotel_id: null } as any)
-      .eq("id", hotelId);
+    await apiClient.post(`/api/admin/api-companies/${hotelsCompany.id}/unlink-hotel`, {
+      hotel_id: hotelId
+    });
     toast({ title: isAr ? "تم إلغاء الربط" : "Hotel unlinked" });
     fetchHotelsForCompany(hotelsCompany.id);
     fetchCompanies();

@@ -10,6 +10,7 @@ import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { apiClient } from "@/lib/apiClient";
 
 const HotelMapView = lazy(() => import("@/components/search/HotelMapView"));
 
@@ -29,31 +30,26 @@ const SearchResults = () => {
 
   const city = searchParams.get("city") || "";
 
-  // ✅ تحميل البيانات من API
+  // Load hotels from API
   useEffect(() => {
     const load = async () => {
       setLoading(true);
 
       try {
-        const res = await fetch("https://backend.naity.net/hotels.php");
-        const data = await res.json();
-
-        console.log("API DATA:", data);
-
-        setHotels(data);
-
+        const response: any = await apiClient.get("/api/hotels", { is_active: true });
+        setHotels(response.data || []);
       } catch (error) {
         console.error(error);
-        toast.error("خطأ بالاتصال");
+        toast.error(tx("خطأ في تحميل الفنادق", "Error loading hotels"));
       }
 
       setLoading(false);
     };
 
     load();
-  }, []);
+  }, [lang]);
 
-  // ✅ فلترة + ترتيب
+  // Filter and sort hotels
   const filtered = useMemo(() => {
     let result = hotels;
 
@@ -62,11 +58,11 @@ const SearchResults = () => {
     }
 
     if (sortBy === "price_low") {
-      result.sort((a, b) => a.price - b.price);
+      result.sort((a, b) => (a.min_price || 0) - (b.min_price || 0));
     }
 
     if (sortBy === "price_high") {
-      result.sort((a, b) => b.price - a.price);
+      result.sort((a, b) => (b.min_price || 0) - (a.min_price || 0));
     }
 
     return result;
@@ -95,31 +91,44 @@ const SearchResults = () => {
 
         {/* Loading */}
         {loading ? (
-          <p>Loading...</p>
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
         ) : filtered.length === 0 ? (
-          <p>No results</p>
+          <div className="text-center py-20">
+            <p className="text-muted-foreground">{tx("لا توجد نتائج", "No results found")}</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((hotel) => (
-              <div key={hotel.id} className="border rounded-xl p-4 shadow">
-
-                <img
-                  src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"
-                  className="rounded-lg mb-3"
-                />
-
-                <h2 className="font-bold text-lg">{hotel.name}</h2>
-
-                <p className="text-sm text-gray-500 flex items-center gap-1">
-                  <MapPin size={14} /> {hotel.city}
-                </p>
-
-                <p className="text-primary font-bold mt-2">
-                  ${hotel.price}
-                </p>
-
-              </div>
-            ))}
+            {filtered.map((hotel) => {
+              const name = lang === "ar" ? hotel.name_ar : hotel.name_en;
+              const coverImage = hotel.cover_image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800";
+              return (
+                <Link key={hotel.id} to={`/hotels/${hotel.id}`} className="border rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow">
+                  <img
+                    src={coverImage}
+                    alt={name}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="p-4">
+                    <div className="flex items-center gap-1 mb-2">
+                      {Array.from({ length: hotel.stars || 0 }).map((_, i) => (
+                        <Star key={i} className="w-3.5 h-3.5 fill-primary text-primary" />
+                      ))}
+                    </div>
+                    <h2 className="font-bold text-lg mb-1">{name}</h2>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
+                      <MapPin size={14} /> {hotel.city}
+                    </p>
+                    {hotel.min_price && (
+                      <p className="text-primary font-bold">
+                        ${hotel.min_price} <span className="text-sm text-muted-foreground font-normal">/{tx("ليلة", "night")}</span>
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

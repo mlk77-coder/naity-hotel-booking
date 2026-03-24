@@ -14,8 +14,9 @@ if (!isset($_GET['key']) || $_GET['key'] !== SECRET_KEY) {
 
 header('Content-Type: application/json');
 
-// Database credentials
-define('MYSQL_HOST', 'localhost'); // Changed from 68.65.123.142 to localhost
+// Database credentials - Both on localhost (same server)
+define('MYSQL_HOST', 'localhost');
+define('MYSQL_PORT', '3306');
 define('DB_NAITY_NAME', 'naitagfz_Naity_Booking');
 define('DB_NAITY_USER', 'naitagfz_Naity_Booking');
 define('DB_NAITY_PASS', 'p3cu(+odU6F^');
@@ -31,7 +32,7 @@ $results = [
 // Test NaityDB Connection
 try {
     $pdoNaity = new PDO(
-        'mysql:host=' . MYSQL_HOST . ';dbname=' . DB_NAITY_NAME . ';charset=utf8mb4',
+        'mysql:host=' . MYSQL_HOST . ';port=' . MYSQL_PORT . ';dbname=' . DB_NAITY_NAME . ';charset=utf8mb4',
         DB_NAITY_USER,
         DB_NAITY_PASS
     );
@@ -58,7 +59,7 @@ try {
 // Test ShamSoftDB Connection
 try {
     $pdoShamSoft = new PDO(
-        'mysql:host=' . MYSQL_HOST . ';dbname=' . DB_SHAMSOFT_NAME . ';charset=utf8mb4',
+        'mysql:host=' . MYSQL_HOST . ';port=' . MYSQL_PORT . ';dbname=' . DB_SHAMSOFT_NAME . ';charset=utf8mb4',
         DB_SHAMSOFT_USER,
         DB_SHAMSOFT_PASS
     );

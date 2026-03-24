@@ -1,6 +1,7 @@
 /**
- * Authentication Hook - API Backend Version
- * Migrated from Supabase to custom Node.js/Express backend
+ * NEW Authentication Hook - Replace useAuth.tsx with this
+ * 
+ * This version uses the custom API backend instead of Supabase
  */
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
@@ -14,12 +15,9 @@ interface User {
   created_at?: string;
 }
 
-type UserType = User | null;
-type SessionType = { user: User } | null;
-
 interface AuthContextType {
-  user: UserType;
-  session: SessionType;
+  user: User | null;
+  session: { user: User } | null; // For compatibility with existing code
   loading: boolean;
   role: "admin" | "hotel_manager" | "user" | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -30,7 +28,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<UserType>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<"admin" | "hotel_manager" | "user" | null>(null);
 
@@ -68,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const response: any = await apiClient.post('/api/auth/login', { email, password });
+      const response = await apiClient.post('/api/auth/login', { email, password });
       
       if (response.success && response.token) {
         localStorage.setItem('token', response.token);
@@ -85,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const response: any = await apiClient.post('/api/auth/register', {
+      const response = await apiClient.post('/api/auth/register', {
         email,
         password,
         full_name: fullName,
@@ -110,8 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRole(null);
   };
 
-  // Create session object for compatibility with existing code
-  const session: SessionType = user ? { user } : null;
+  // Create session object for compatibility
+  const session = user ? { user } : null;
 
   return (
     <AuthContext.Provider value={{ user, session, loading, role, signIn, signUp, signOut }}>

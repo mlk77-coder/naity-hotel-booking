@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star, MapPin, ArrowLeft, ArrowRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 
 const FeaturedHotels = () => {
   const navigate = useNavigate();
@@ -12,34 +12,20 @@ const FeaturedHotels = () => {
   const Arrow = lang === "ar" ? ArrowLeft : ArrowRight;
 
   const [hotels, setHotels] = useState<any[]>([]);
-  const [prices, setPrices] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from("hotels")
-        .select("*")
-        .eq("is_active", true)
-        .not("cover_image", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(6);
-      if (data) {
-        setHotels(data);
-        // fetch min prices
-        const { data: rooms } = await supabase
-          .from("room_categories")
-          .select("hotel_id, price_per_night")
-          .eq("is_active", true)
-          .in("hotel_id", data.map(h => h.id));
-        if (rooms) {
-          const map: Record<string, number> = {};
-          rooms.forEach(r => {
-            if (!map[r.hotel_id] || r.price_per_night < map[r.hotel_id]) {
-              map[r.hotel_id] = r.price_per_night;
-            }
-          });
-          setPrices(map);
+      try {
+        const response: any = await apiClient.get("/api/hotels", {
+          is_active: true,
+          has_cover: true,
+          limit: 6,
+        });
+        if (response.data) {
+          setHotels(response.data);
         }
+      } catch (error) {
+        console.error("Error loading featured hotels:", error);
       }
     };
     load();
@@ -62,7 +48,7 @@ const FeaturedHotels = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {hotels.map((hotel, i) => {
             const name = lang === "ar" ? hotel.name_ar : hotel.name_en;
-            const price = prices[hotel.id];
+            const price = hotel.min_price;
             return (
               <motion.div key={hotel.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
                 <Link to={`/hotels/${hotel.id}`} className="group block rounded-2xl overflow-hidden bg-card shadow-card border border-border/50 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1">
@@ -76,7 +62,7 @@ const FeaturedHotels = () => {
                   </div>
                   <div className="p-4 space-y-2">
                     <div className="flex items-center gap-1">
-                      {Array.from({ length: hotel.stars }).map((_, i) => (
+                      {Array.from({ length: hotel.stars || 0 }).map((_, i) => (
                         <Star key={i} className="w-3.5 h-3.5 fill-primary text-primary" />
                       ))}
                     </div>

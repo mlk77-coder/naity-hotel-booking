@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Save, Star } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Tables } from "@/integrations/supabase/types";
 import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
 
 const HOTEL_AMENITY_OPTIONS = [
@@ -21,7 +20,7 @@ const HOTEL_AMENITY_OPTIONS = [
   { key: "gym", label_en: "Gym/Spa", label_ar: "صالة رياضية/سبا" },
 ];
 
-const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
+const HotelGeneralTab = ({ hotel }: { hotel: any }) => {
   const { lang } = useI18n();
   const queryClient = useQueryClient();
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
@@ -29,24 +28,16 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
   const { data: techPartners = [] } = useQuery({
     queryKey: ["tech-partners-list"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("tech_partners")
-        .select("id, name, name_ar")
-        .eq("is_active", true)
-        .order("name");
-      return data ?? [];
+      const response: any = await apiClient.get("/api/admin/partners");
+      return response.data ?? [];
     },
   });
 
   const { data: apiCompanies = [] } = useQuery({
     queryKey: ["api-companies-list"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("api_companies")
-        .select("id, name, name_ar")
-        .eq("status", "active")
-        .order("name");
-      return data ?? [];
+      const response: any = await apiClient.get("/api/admin/api-companies");
+      return response.data ?? [];
     },
   });
 
@@ -104,8 +95,7 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
         bathrooms: form.bathrooms !== "" && form.bathrooms != null ? Number(form.bathrooms) : null,
         stars: form.stars != null ? Number(form.stars) : null,
       };
-      const { error } = await supabase.from("hotels").update(payload as any).eq("id", hotel.id);
-      if (error) throw error;
+      await apiClient.put(`/api/hotels/${hotel.id}`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotel-detail", hotel.id] });

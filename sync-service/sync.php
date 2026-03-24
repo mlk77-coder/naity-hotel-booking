@@ -17,16 +17,16 @@ define('SECRET_KEY', 'naity_sync_rDqhMn85HXLcuiTBIaRt6vAmeKY3ClP2');
 define('SUPABASE_URL', 'https://scmgtoqilbkakxikigtz.supabase.co');
 define('SUPABASE_SERVICE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbWd0b3FpbGJrYWt4aWtpZ3R6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUzNTA3MywiZXhwIjoyMDg4MTExMDczfQ.EwRswaOkNiC9xZNhjB8vYg-WOR41GAuaobSGTxj3FKM');
 
-// MySQL Configuration (Namecheap Shared Server - 68.65.123.142)
-// Both databases are on the same server
-define('MYSQL_HOST', 'localhost'); // Changed from 68.65.123.142 to localhost
+// MySQL Configuration - Both databases on localhost (same server)
+define('MYSQL_HOST', 'localhost');
+define('MYSQL_PORT', '3306');
 
-// Naity Booking Database (Main System)
+// Bridge Database (Naity Booking - Main System)
 define('DB_NAITY_NAME', 'naitagfz_Naity_Booking');
 define('DB_NAITY_USER', 'naitagfz_Naity_Booking');
 define('DB_NAITY_PASS', 'p3cu(+odU6F^');
 
-// ShamSoft Database (Local Hotel System)
+// Target Database (ShamSoft - Local Hotel System)
 define('DB_SHAMSOFT_NAME', 'naitagfz_Cham_Soft');
 define('DB_SHAMSOFT_USER', 'naitagfz_Samir');
 define('DB_SHAMSOFT_PASS', 'r(eJX+6Cwjx1');
@@ -101,11 +101,11 @@ function supabaseRequest($method, $endpoint, $data = null) {
 }
 
 /**
- * Create PDO connection
+ * Create PDO connection with port
  */
 function createConnection($database, $user, $password) {
     try {
-        $dsn = "mysql:host=" . MYSQL_HOST . ";dbname=$database;charset=utf8mb4";
+        $dsn = "mysql:host=" . MYSQL_HOST . ";port=" . MYSQL_PORT . ";dbname=$database;charset=utf8mb4";
         $pdo = new PDO($dsn, $user, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $pdo;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import naityLogo from "@/assets/naity-logo.png";
 import { DollarSign, BookOpen, LogOut, Plus, Trash2, Upload, Pencil, Globe, ImagePlus, Star, Calendar as CalendarIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, getDaysInMonth, getDay, endOfMonth } from "date-fns";
-import type { Tables } from "@/integrations/supabase/types";
 
 const HotelPanel = () => {
   const { user, signOut } = useAuth();
@@ -24,9 +23,8 @@ const HotelPanel = () => {
   const { data: hotel, isLoading: hotelLoading } = useQuery({
     queryKey: ["my-hotel", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("hotels").select("*").eq("manager_id", user!.id).maybeSingle();
-      if (error) throw error;
-      return data;
+      const response: any = await apiClient.get("/api/hotel-panel/my-hotel");
+      return response.data?.hotel;
     },
     enabled: !!user,
   });
@@ -35,8 +33,8 @@ const HotelPanel = () => {
   const { data: syncSetting } = useQuery({
     queryKey: ["my-hotel-sync", hotel?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("local_sync_settings").select("is_active").eq("hotel_id", hotel!.id).maybeSingle();
-      return data;
+      const response: any = await apiClient.get(`/api/admin/sync-settings/${hotel!.id}`);
+      return response.data;
     },
     enabled: !!hotel?.id,
   });
@@ -127,13 +125,12 @@ const AvailabilityCalendar = ({ hotelId }: { hotelId: string }) => {
     queryFn: async () => {
       const start = format(currentMonth, "yyyy-MM-dd");
       const end = format(endOfMonth(currentMonth), "yyyy-MM-dd");
-      const { data } = await supabase
-        .from("blocked_dates")
-        .select("blocked_date")
-        .eq("hotel_id", hotelId)
-        .gte("blocked_date", start)
-        .lte("blocked_date", end);
-      return data?.map(d => d.blocked_date) ?? [];
+      const response: any = await apiClient.get("/api/hotel-panel/blocked-dates", {
+        hotel_id: hotelId,
+        start_date: start,
+        end_date: end
+      });
+      return response.data?.map((d: any) => d.blocked_date) ?? [];
     },
   });
 
@@ -142,15 +139,13 @@ const AvailabilityCalendar = ({ hotelId }: { hotelId: string }) => {
     queryFn: async () => {
       const start = format(currentMonth, "yyyy-MM-dd");
       const end = format(endOfMonth(currentMonth), "yyyy-MM-dd");
-      const { data } = await supabase
-        .from("bookings")
-        .select("check_in, check_out")
-        .eq("hotel_id", hotelId)
-        .in("status", ["confirmed", "active"])
-        .lte("check_in", end)
-        .gte("check_out", start);
+      const response: any = await apiClient.get("/api/hotel-panel/booked-dates", {
+        hotel_id: hotelId,
+        start_date: start,
+        end_date: end
+      });
       const dates: string[] = [];
-      data?.forEach(b => {
+      response.data?.forEach((b: any) => {
         const d = new Date(b.check_in);
         const out = new Date(b.check_out);
         while (d < out) {
@@ -164,9 +159,12 @@ const AvailabilityCalendar = ({ hotelId }: { hotelId: string }) => {
 
   const toggleDate = async (dateStr: string) => {
     if (isBlocked(dateStr)) {
-      await supabase.from("blocked_dates").delete().eq("hotel_id", hotelId).eq("blocked_date", dateStr);
+      await apiClient.delete(`/api/hotel-panel/blocked-dates/${hotelId}/${dateStr}`);
     } else {
-      await supabase.from("blocked_dates").insert({ hotel_id: hotelId, blocked_date: dateStr });
+      await apiClient.post("/api/hotel-panel/blocked-dates", {
+        hotel_id: hotelId,
+        blocked_date: dateStr
+      });
     }
     queryClient.invalidateQueries({ queryKey: ["blocked-dates", hotelId] });
   };
@@ -282,7 +280,7 @@ const RoomCategories = ({ hotelId }: { hotelId: string }) => {
   const { lang } = useI18n();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Tables<"room_categories"> | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({ name_ar: "", name_en: "", price_per_night: 0, max_guests: 2, total_rooms: 1 });
 
   const t = (ar: string, en: string) => lang === "ar" ? ar : en;
@@ -290,8 +288,8 @@ const RoomCategories = ({ hotelId }: { hotelId: string }) => {
   const { data: categories } = useQuery({
     queryKey: ["room-categories", hotelId],
     queryFn: async () => {
-      const { data } = await supabase.from("room_categories").select("*").eq("hotel_id", hotelId).order("price_per_night");
-      return data ?? [];
+      const response: any = await apiClient.get("/api/rooms", { hotel_id: hotelId });
+      return response.data ?? [];
     },
   });
 
@@ -299,11 +297,9 @@ const RoomCategories = ({ hotelId }: { hotelId: string }) => {
     mutationFn: async () => {
       const payload = { ...form, hotel_id: hotelId };
       if (editing) {
-        const { error } = await supabase.from("room_categories").update(payload).eq("id", editing.id);
-        if (error) throw error;
+        await apiClient.put(`/api/rooms/${editing.id}`, payload);
       } else {
-        const { error } = await supabase.from("room_categories").insert(payload);
-        if (error) throw error;
+        await apiClient.post("/api/rooms", payload);
       }
     },
     onSuccess: () => {
@@ -317,8 +313,7 @@ const RoomCategories = ({ hotelId }: { hotelId: string }) => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("room_categories").delete().eq("id", id);
-      if (error) throw error;
+      await apiClient.delete(`/api/rooms/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["room-categories"] });
@@ -360,7 +355,7 @@ const RoomCategories = ({ hotelId }: { hotelId: string }) => {
       </div>
 
       <div className="grid gap-4">
-        {categories?.map((cat) => (
+        {categories?.map((cat: any) => (
           <div key={cat.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card flex items-center justify-between flex-wrap gap-3">
             <div>
               <h3 className="font-semibold text-foreground">{lang === "ar" ? cat.name_ar : cat.name_en}</h3>
@@ -397,16 +392,16 @@ const HotelPhotos = ({ hotelId }: { hotelId: string }) => {
   const { data: photos } = useQuery({
     queryKey: ["hotel-photos", hotelId],
     queryFn: async () => {
-      const { data } = await supabase.from("hotel_photos").select("*").eq("hotel_id", hotelId).order("sort_order");
-      return data ?? [];
+      const response: any = await apiClient.get(`/api/hotels/${hotelId}/photos`);
+      return response.data ?? [];
     },
   });
 
   const { data: hotel } = useQuery({
     queryKey: ["hotel-cover", hotelId],
     queryFn: async () => {
-      const { data } = await supabase.from("hotels").select("cover_image").eq("id", hotelId).single();
-      return data;
+      const response: any = await apiClient.get(`/api/hotels/${hotelId}`);
+      return response.data.hotel;
     },
   });
 
@@ -414,28 +409,30 @@ const HotelPhotos = ({ hotelId }: { hotelId: string }) => {
     setUploading(true);
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
-      const ext = file.name.split(".").pop();
-      const path = `${hotelId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("hotel-photos").upload(path, file);
-      if (uploadError) { toast.error(uploadError.message); continue; }
-      const { data: { publicUrl } } = supabase.storage.from("hotel-photos").getPublicUrl(path);
-      await supabase.from("hotel_photos").insert({ hotel_id: hotelId, url: publicUrl, sort_order: (photos?.length ?? 0) });
+      
+      const formData = new FormData();
+      formData.append("photo", file);
+      formData.append("hotel_id", hotelId);
+      
+      try {
+        await apiClient.upload(`/api/hotels/${hotelId}/photos`, formData);
+      } catch (error: any) {
+        toast.error(error.message);
+      }
     }
     queryClient.invalidateQueries({ queryKey: ["hotel-photos", hotelId] });
     setUploading(false);
     toast.success(t("تم رفع الصور بنجاح", "Photos uploaded successfully"));
   };
 
-  const deletePhoto = async (photo: Tables<"hotel_photos">) => {
-    const urlParts = photo.url.split("/hotel-photos/");
-    if (urlParts[1]) await supabase.storage.from("hotel-photos").remove([urlParts[1]]);
-    await supabase.from("hotel_photos").delete().eq("id", photo.id);
+  const deletePhoto = async (photo: any) => {
+    await apiClient.delete(`/api/hotels/${hotelId}/photos/${photo.id}`);
     queryClient.invalidateQueries({ queryKey: ["hotel-photos", hotelId] });
     toast.success(t("تم حذف الصورة", "Photo deleted"));
   };
 
   const setAsMain = async (url: string) => {
-    await supabase.from("hotels").update({ cover_image: url }).eq("id", hotelId);
+    await apiClient.put(`/api/hotels/${hotelId}`, { cover_image: url });
     queryClient.invalidateQueries({ queryKey: ["hotel-cover", hotelId] });
     toast.success(t("تم تعيين صورة الغلاف", "Main image set"));
   };
@@ -465,7 +462,7 @@ const HotelPhotos = ({ hotelId }: { hotelId: string }) => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {photos?.map((photo) => {
+        {photos?.map((photo: any) => {
           const isMain = hotel?.cover_image === photo.url;
           return (
             <div key={photo.id} className={`relative group rounded-xl overflow-hidden border-2 transition-colors ${isMain ? "border-primary" : "border-border/50 hover:border-border"}`}>
@@ -505,12 +502,10 @@ const HotelBookings = ({ hotelId }: { hotelId: string }) => {
   const { data: bookings } = useQuery({
     queryKey: ["hotel-bookings", hotelId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("bookings")
-        .select("*, room_categories(name_ar, name_en)")
-        .eq("hotel_id", hotelId)
-        .order("created_at", { ascending: false });
-      return data ?? [];
+      const response: any = await apiClient.get("/api/hotel-panel/bookings", {
+        hotel_id: hotelId
+      });
+      return response.data ?? [];
     },
   });
 
@@ -531,10 +526,10 @@ const HotelBookings = ({ hotelId }: { hotelId: string }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {bookings?.map((b) => (
+              {bookings?.map((b: any) => (
                 <tr key={b.id} className="hover:bg-muted/50">
                   <td className="p-3 text-foreground">{b.guest_first_name} {b.guest_last_name}</td>
-                  <td className="p-3 text-foreground">{lang === "ar" ? (b.room_categories as any)?.name_ar : (b.room_categories as any)?.name_en}</td>
+                  <td className="p-3 text-foreground">{lang === "ar" ? b.room_name_ar : b.room_name_en}</td>
                   <td className="p-3 text-foreground">{b.check_in}</td>
                   <td className="p-3 text-foreground">{b.check_out}</td>
                   <td className="p-3 font-medium text-foreground" dir="ltr">${b.total_price}</td>

@@ -2,13 +2,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, Users, Check, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Calendar, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { getRoomsByHotel } from "@/services";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import type { Tables } from "@/integrations/supabase/types";
 
 const DEPOSIT_PERCENT = 10;
 
@@ -16,9 +15,9 @@ const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, lang } = useI18n();
-  const [hotel, setHotel] = useState<Tables<'hotels'> | null>(null);
-  const [photos, setPhotos] = useState<Tables<'hotel_photos'>[]>([]);
-  const [rooms, setRooms] = useState<Tables<'room_categories'>[]>([]);
+  const [hotel, setHotel] = useState<any | null>(null);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [galleryIdx, setGalleryIdx] = useState(0);
 
@@ -36,24 +35,30 @@ const HotelDetails = () => {
     if (!id) return;
     const load = async () => {
       setLoading(true);
-      const [hotelRes, photosRes, roomsRes] = await Promise.all([
-        supabase.from("hotels").select("*").eq("id", id).eq("is_active", true).single(),
-        supabase.from("hotel_photos").select("*").eq("hotel_id", id).order("sort_order"),
-        supabase.from("room_categories").select("*").eq("hotel_id", id).eq("is_active", true).order("price_per_night"),
-      ]);
-      if (hotelRes.error) {
-        console.error(hotelRes.error);
+      try {
+        // Get hotel details
+        const hotelResponse: any = await apiClient.get(`/api/hotels/${id}`);
+        
+        if (!hotelResponse.success || !hotelResponse.data) {
+          toast.error(lang === "ar" ? "حدث خطأ في تحميل البيانات" : "Failed to load data");
+          setLoading(false);
+          return;
+        }
+
+        const { hotel: hotelData, photos: photosData, rooms: roomsData } = hotelResponse.data;
+        
+        setHotel(hotelData);
+        setPhotos(photosData || []);
+        setRooms(roomsData || []);
+      } catch (error) {
+        console.error('Error loading hotel:', error);
         toast.error(lang === "ar" ? "حدث خطأ في تحميل البيانات" : "Failed to load data");
+      } finally {
         setLoading(false);
-        return;
       }
-      setHotel(hotelRes.data);
-      setPhotos(photosRes.data || []);
-      setRooms(roomsRes.data || []);
-      setLoading(false);
     };
     load();
-  }, [id]);
+  }, [id, lang]);
 
   // Fetch available rooms when dates change
   useEffect(() => {
@@ -65,29 +70,31 @@ const HotelDetails = () => {
 
       // Check blocked dates for apartments/non-sync properties
       if ((hotel as any).property_type === "apartment") {
-        // Check manually blocked dates
-        const { data: blocked } = await supabase
-          .from("blocked_dates")
-          .select("blocked_date")
-          .eq("hotel_id", hotel.id)
-          .gte("blocked_date", checkIn)
-          .lt("blocked_date", checkOut);
+        try {
+          // Check manually blocked dates via API
+          const blockedResponse: any = await apiClient.get('/api/admin/blocked-dates', {
+            hotel_id: hotel.id,
+            start_date: checkIn,
+            end_date: checkOut
+          });
 
-        // Also check existing confirmed bookings for overlap
-        const { data: existingBookings } = await supabase
-          .from("bookings")
-          .select("check_in, check_out")
-          .eq("hotel_id", hotel.id)
-          .in("status", ["confirmed", "active", "checked_in"])
-          .lt("check_in", checkOut)
-          .gt("check_out", checkIn);
+          // Check existing confirmed bookings for overlap
+          const bookingsResponse: any = await apiClient.get('/api/bookings', {
+            hotel_id: hotel.id,
+            check_in_before: checkOut,
+            check_out_after: checkIn,
+            status: 'confirmed,active,checked_in'
+          });
 
-        if ((blocked?.length ?? 0) > 0 || (existingBookings?.length ?? 0) > 0) {
-          setIsDateBlocked(true);
-          setAvailableRooms([]);
-          setHasSearched(true);
-          setAvailabilityLoading(false);
-          return;
+          if ((blockedResponse.data?.length ?? 0) > 0 || (bookingsResponse.data?.length ?? 0) > 0) {
+            setIsDateBlocked(true);
+            setAvailableRooms([]);
+            setHasSearched(true);
+            setAvailabilityLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking blocked dates:', error);
         }
       }
 

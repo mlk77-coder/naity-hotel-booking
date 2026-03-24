@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -38,15 +38,8 @@ const AdminPartners = () => {
   const { data: partners, isLoading } = useQuery({
     queryKey: ["admin-partners"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tech_partners")
-        .select("*, hotels(id)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []).map((p: any) => ({
-        ...p,
-        hotels_count: Array.isArray(p.hotels) ? p.hotels.length : 0,
-      }));
+      const response: any = await apiClient.get("/api/admin/partners");
+      return response.data ?? [];
     },
   });
 
@@ -64,11 +57,9 @@ const AdminPartners = () => {
       if (!payload.name) throw new Error(lang === "ar" ? "الاسم مطلوب" : "Name is required");
 
       if (editId) {
-        const { error } = await supabase.from("tech_partners").update(payload).eq("id", editId);
-        if (error) throw error;
+        await apiClient.put(`/api/admin/partners/${editId}`, payload);
       } else {
-        const { error } = await supabase.from("tech_partners").insert(payload);
-        if (error) throw error;
+        await apiClient.post("/api/admin/partners", payload);
       }
     },
     onSuccess: () => {
@@ -89,8 +80,7 @@ const AdminPartners = () => {
           ? "لا يمكن حذف شريك مرتبط بعقارات. قم بفك الارتباط أولاً."
           : "Cannot delete a partner linked to properties. Unlink them first.");
       }
-      const { error } = await supabase.from("tech_partners").delete().eq("id", id);
-      if (error) throw error;
+      await apiClient.delete(`/api/admin/partners/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-partners"] });
@@ -130,15 +120,15 @@ const AdminPartners = () => {
     }
     setCreatingLogin(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-partner", {
-        body: { email: loginEmail.trim(), password: loginPassword, partner_id: loginPartnerId },
+      const response: any = await apiClient.post("/api/admin/partners/create-login", {
+        email: loginEmail.trim(),
+        password: loginPassword,
+        partner_id: loginPartnerId
       });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
       toast.success(
         lang === "ar"
-          ? `تم إنشاء الحساب بنجاح لـ ${data.email}`
-          : `Account created successfully for ${data.email}`
+          ? `تم إنشاء الحساب بنجاح لـ ${response.data.email}`
+          : `Account created successfully for ${response.data.email}`
       );
       setLoginOpen(false);
       setLoginEmail("");

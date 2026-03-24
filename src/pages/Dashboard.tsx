@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/apiClient";
 
 const Dashboard = () => {
   const { user, role, loading } = useAuth();
@@ -9,13 +9,24 @@ const Dashboard = () => {
   const [isPartner, setIsPartner] = useState(false);
 
   useEffect(() => {
-    if (!user) { setChecking(false); return; }
-    supabase.from("partner_users").select("partner_id")
-      .eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => {
-        setIsPartner(!!data);
+    if (!user) { 
+      setChecking(false); 
+      return; 
+    }
+    
+    // Check if user is a partner
+    const checkPartner = async () => {
+      try {
+        const response: any = await apiClient.get('/api/partner/check');
+        setIsPartner(response.success && response.is_partner);
+      } catch (error) {
+        setIsPartner(false);
+      } finally {
         setChecking(false);
-      });
+      }
+    };
+    
+    checkPartner();
   }, [user]);
 
   console.log("Dashboard debug:", { user: user?.email, role, isPartner, loading, checking });
