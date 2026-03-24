@@ -24,8 +24,14 @@ const AdminRooms = () => {
   const { data: hotels } = useQuery({
     queryKey: ["admin-hotels-list"],
     queryFn: async () => {
-      const response: any = await apiClient.get("/api/hotels");
-      return response.data ?? [];
+      try {
+        const response: any = await apiClient.get("/api/admin/hotels");
+        console.log("Hotels loaded:", response.data?.length || 0, response.data);
+        return response.data ?? [];
+      } catch (error) {
+        console.error("Error loading hotels:", error);
+        return [];
+      }
     },
   });
 
@@ -40,6 +46,11 @@ const AdminRooms = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Validate hotel_id
+      if (!form.hotel_id) {
+        throw new Error(lang === "ar" ? "يجب اختيار الفندق" : "Please select a hotel");
+      }
+      
       if (editing) {
         await apiClient.put(`/api/rooms/${editing.id}`, form);
       } else {
@@ -98,14 +109,30 @@ const AdminRooms = () => {
               <form onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
                 <div>
                   <Label>{lang === "ar" ? "الفندق" : "Hotel"}</Label>
-                  <Select value={form.hotel_id} onValueChange={(v) => setForm(f => ({ ...f, hotel_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder={lang === "ar" ? "اختر فندق" : "Select hotel"} /></SelectTrigger>
-                    <SelectContent>
-                      {hotels?.map((h) => (
-                        <SelectItem key={h.id} value={h.id}>{lang === "ar" ? h.name_ar : h.name_en}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={form.hotel_id}
+                    onChange={(e) => setForm(f => ({ ...f, hotel_id: e.target.value }))}
+                    className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    required
+                  >
+                    <option value="">{lang === "ar" ? "اختر فندق" : "Select hotel"}</option>
+                    {hotels && hotels.length > 0 ? (
+                      hotels.map((h) => (
+                        <option key={h.id} value={h.id}>
+                          {lang === "ar" ? (h.name_ar || h.name_en) : (h.name_en || h.name_ar)} - {h.city}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>
+                        {lang === "ar" ? "لا توجد فنادق" : "No hotels available"}
+                      </option>
+                    )}
+                  </select>
+                  {hotels && hotels.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {hotels.length} {lang === "ar" ? "فندق متاح" : "hotel(s) available"}
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label><Input value={form.name_ar} onChange={(e) => setForm(f => ({ ...f, name_ar: e.target.value }))} required /></div>
@@ -127,15 +154,18 @@ const AdminRooms = () => {
         {/* Hotel filter */}
         <div className="flex items-center gap-3">
           <Label className="text-sm shrink-0">{lang === "ar" ? "تصفية بالفندق:" : "Filter by hotel:"}</Label>
-          <Select value={selectedHotel} onValueChange={setSelectedHotel}>
-            <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{lang === "ar" ? "جميع الفنادق" : "All Hotels"}</SelectItem>
-              {hotels?.map((h) => (
-                <SelectItem key={h.id} value={h.id}>{lang === "ar" ? h.name_ar : h.name_en}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            value={selectedHotel}
+            onChange={(e) => setSelectedHotel(e.target.value)}
+            className="w-64 h-10 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <option value="all">{lang === "ar" ? "جميع الفنادق" : "All Hotels"}</option>
+            {hotels?.map((h) => (
+              <option key={h.id} value={h.id}>
+                {lang === "ar" ? (h.name_ar || h.name_en) : (h.name_en || h.name_ar)} - {h.city}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Inventory Table */}

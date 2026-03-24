@@ -26,7 +26,7 @@ const AdminManagers = () => {
   // Fetch hotels directly with useEffect to avoid RLS timing issues
   useEffect(() => {
     const fetchHotels = async () => {
-      const response: any = await apiClient.get("/api/hotels");
+      const response: any = await apiClient.get("/api/admin/hotels");
       if (response.data) {
         setHotelsList(response.data);
       }
@@ -81,7 +81,7 @@ const AdminManagers = () => {
             setOpen(v);
             if (v) {
               // Refresh hotels list when dialog opens
-              apiClient.get("/api/hotels")
+              apiClient.get("/api/admin/hotels")
                 .then((response: any) => { if (response.data) setHotelsList(response.data); });
             }
           }}>
@@ -117,18 +117,18 @@ const AdminManagers = () => {
                       {lang === "ar" ? "جاري تحميل الفنادق..." : "Loading hotels..."}
                     </p>
                   ) : (
-                    <Select value={hotelId} onValueChange={setHotelId}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder={lang === "ar" ? "اختر فندق" : "Select hotel"} />
-                      </SelectTrigger>
-                      <SelectContent className="z-[300]">
-                        {hotelsList.map((h: any) => (
-                          <SelectItem key={h.id} value={h.id}>
-                            {lang === "ar" ? (h.name_ar || h.name_en) : (h.name_en || h.name_ar)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <select
+                      value={hotelId}
+                      onChange={(e) => setHotelId(e.target.value)}
+                      className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+                    >
+                      <option value="">{lang === "ar" ? "اختر فندق" : "Select hotel"}</option>
+                      {hotelsList.map((h: any) => (
+                        <option key={h.id} value={h.id}>
+                          {lang === "ar" ? (h.name_ar || h.name_en) : (h.name_en || h.name_ar)} - {h.city}
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
                 <Button type="submit" className="w-full gradient-cta" disabled={createManager.isPending}>

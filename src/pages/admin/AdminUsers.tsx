@@ -44,13 +44,7 @@ const ROLE_OPTIONS = [
   { value: "viewer", ar: "مشاهد فقط", en: "View Only" },
 ] as const;
 
-const callManageUser = async (body: Record<string, unknown>) => {
-  const response: any = await apiClient.post('/api/admin/users/manage', body);
-  if (!response.success) {
-    throw new Error(response.message || "Request failed");
-  }
-  return response.data;
-};
+// No longer needed - using REST endpoints directly
 
 const AdminUsers = () => {
   const { lang } = useI18n();
@@ -71,20 +65,24 @@ const AdminUsers = () => {
   const { data: users = [], isLoading } = useQuery<ManagedUser[]>({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const res = await callManageUser({ action: "list" });
-      return res.users ?? [];
+      const response: any = await apiClient.get('/api/admin/users');
+      return response.data ?? [];
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: () =>
-      callManageUser({
-        action: "create",
+    mutationFn: async () => {
+      const response: any = await apiClient.post('/api/admin/users', {
         email,
         password,
         role,
         full_name: fullName,
-      }),
+      });
+      if (!response.success) {
+        throw new Error(response.message || "Failed to create user");
+      }
+      return response;
+    },
     onSuccess: () => {
       toast.success(tx(`تم إنشاء حساب ${email}`, `Account ${email} created`));
       setFullName("");
@@ -97,8 +95,17 @@ const AdminUsers = () => {
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: ({ user_id, role }: { user_id: string; role: string }) =>
-      callManageUser({ action: "update_role", user_id, role }),
+    mutationFn: async ({ user_id, role }: { user_id: string; role: string }) => {
+      const user = users.find(u => u.id === user_id);
+      const response: any = await apiClient.put(`/api/admin/users/${user_id}`, {
+        full_name: user?.full_name || '',
+        role,
+      });
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update role");
+      }
+      return response;
+    },
     onSuccess: () => {
       toast.success(tx("تم تحديث الصلاحية", "Role updated"));
       setEditingUserId(null);
@@ -108,8 +115,13 @@ const AdminUsers = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (user_id: string) =>
-      callManageUser({ action: "delete", user_id }),
+    mutationFn: async (user_id: string) => {
+      const response: any = await apiClient.delete(`/api/admin/users/${user_id}`);
+      if (!response.success) {
+        throw new Error(response.message || "Failed to delete user");
+      }
+      return response;
+    },
     onSuccess: () => {
       toast.success(tx("تم حذف المستخدم", "User deleted"));
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });

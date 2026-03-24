@@ -55,7 +55,7 @@ const AdminHotels = () => {
   const { data: hotels, isLoading } = useQuery({
     queryKey: ["admin-hotels"],
     queryFn: async () => {
-      const response: any = await apiClient.get('/api/hotels');
+      const response: any = await apiClient.get('/api/admin/hotels');
       if (!response.success) throw new Error(response.message);
       return response.data;
     },
