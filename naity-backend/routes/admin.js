@@ -13,66 +13,67 @@ router.use(authMiddleware, adminOnly);
 // ============================================================
 router.get("/stats", async (req, res) => {
   try {
+    // Total hotels (active)
     const [totalHotels] = await db.query(
       "SELECT COUNT(*) as count FROM hotels WHERE is_active = 1"
     );
+    
+    // Total bookings
     const [totalBookings] = await db.query(
       "SELECT COUNT(*) as count FROM bookings"
     );
-    const [pendingBookings] = await db.query(
-      "SELECT COUNT(*) as count FROM bookings WHERE status = 'pending'"
+    
+    // Total managers
+    const [totalManagers] = await db.query(
+      "SELECT COUNT(*) as count FROM users WHERE role = 'hotel_manager'"
     );
-    const [confirmedBookings] = await db.query(
-      "SELECT COUNT(*) as count FROM bookings WHERE status = 'confirmed'"
+    
+    // Today's check-ins
+    const [todayCheckIns] = await db.query(
+      "SELECT COUNT(*) as count FROM bookings WHERE DATE(check_in) = CURDATE()"
     );
-    const [cancelledBookings] = await db.query(
-      "SELECT COUNT(*) as count FROM bookings WHERE status = 'cancelled'"
-    );
-    const [totalRevenue] = await db.query(
+    
+    // Total deposits (paid)
+    const [totalDeposits] = await db.query(
       "SELECT COALESCE(SUM(deposit_amount), 0) as total FROM bookings WHERE payment_status = 'paid'"
     );
-    const [totalUsers] = await db.query(
-      "SELECT COUNT(*) as count FROM users WHERE role = 'user'"
+    
+    // Pending sync (bookings not synced to hotel systems)
+    const [pendingSync] = await db.query(
+      "SELECT COUNT(*) as count FROM bookings WHERE sync_status IS NULL OR sync_status = 'pending'"
     );
-    const [unreadMessages] = await db.query(
-      "SELECT COUNT(*) as count FROM contact_messages WHERE is_read = 0"
-    );
-
-    // حجوزات آخر 7 أيام
+    
+    // Recent bookings (last 10)
     const [recentBookings] = await db.query(
-      `SELECT DATE(created_at) as date, COUNT(*) as count, SUM(deposit_amount) as revenue
-       FROM bookings
-       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-       GROUP BY DATE(created_at)
-       ORDER BY date ASC`
-    );
-
-    // أكثر الفنادق حجزاً
-    const [topHotels] = await db.query(
-      `SELECT h.name_ar, h.name_en, h.city, COUNT(b.id) as booking_count
-       FROM hotels h
-       LEFT JOIN bookings b ON b.hotel_id = h.id
-       WHERE h.is_active = 1
-       GROUP BY h.id
-       ORDER BY booking_count DESC
-       LIMIT 5`
+      `SELECT 
+        b.id,
+        b.guest_first_name,
+        b.guest_last_name,
+        b.check_in,
+        b.check_out,
+        b.total_price,
+        b.status,
+        b.created_at,
+        h.name_en as hotel_name_en,
+        h.name_ar as hotel_name_ar
+       FROM bookings b
+       LEFT JOIN hotels h ON b.hotel_id = h.id
+       ORDER BY b.created_at DESC
+       LIMIT 10`
     );
 
     res.json({
       success: true,
       data: {
-        hotels: totalHotels[0].count,
-        bookings: {
-          total: totalBookings[0].count,
-          pending: pendingBookings[0].count,
-          confirmed: confirmedBookings[0].count,
-          cancelled: cancelledBookings[0].count,
+        overview: {
+          total_hotels: totalHotels[0].count,
+          total_bookings: totalBookings[0].count,
+          total_managers: totalManagers[0].count,
+          today_checkins: todayCheckIns[0].count,
+          total_deposits: totalDeposits[0].total,
+          pending_sync: pendingSync[0].count,
         },
-        revenue: totalRevenue[0].total,
-        users: totalUsers[0].count,
-        unread_messages: unreadMessages[0].count,
         recent_bookings: recentBookings,
-        top_hotels: topHotels,
       },
     });
   } catch (err) {
