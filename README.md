@@ -1,73 +1,127 @@
-# Welcome to your Lovable project
+# Naity Hotel Booking Platform
 
-## Project info
+A full-stack hotel booking platform with React frontend and Node.js/Express/MySQL backend.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Project Structure
 
-## How can I edit this code?
+```
+naity-hotel-booking/
+├── app/                    # React frontend application
+│   ├── src/               # Source code
+│   ├── public/            # Static assets
+│   └── package.json       # Frontend dependencies
+│
+└── naity-backend/         # Node.js/Express backend
+    ├── routes/            # API route handlers
+    ├── middleware/        # Authentication & validation
+    ├── config/            # Database configuration
+    └── index.js           # Main server file
+```
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+### Frontend
+- React 18 with TypeScript
+- Vite for build tooling
+- Tailwind CSS + shadcn/ui components
+- React Router for navigation
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Backend
+- Node.js with Express
+- MySQL database
+- JWT authentication
+- bcrypt for password hashing
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
+- Node.js (v16 or higher)
+- MySQL (v8 or higher)
+- npm or yarn
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend Setup
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Navigate to backend directory:
+```bash
+cd naity-backend
+```
 
-Follow these steps:
+2. Install dependencies:
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Create `.env` file with your configuration:
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=naitagfz_db
+JWT_SECRET=your_jwt_secret
+PORT=3000
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. Import the database schema (see `naity-backend/complete-database-setup.sql`)
 
-# Step 3: Install the necessary dependencies.
-npm i
+5. Start the backend server:
+```bash
+npm start
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Backend will run on http://localhost:3000
+
+### Frontend Setup
+
+1. Navigate to app directory:
+```bash
+cd app
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create `.env` file:
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+4. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Frontend will run on http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Admin Access
 
-**Use GitHub Codespaces**
+Default admin credentials:
+- Email: admin@naitagfz.com
+- Password: Admin@Naity2024
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## API Documentation
 
-## What technologies are used for this project?
+The backend provides RESTful APIs for:
+- User authentication & management
+- Hotel listings & details
+- Room management
+- Booking operations
+- Admin panel operations
+- Contact messages
+- API company integrations
 
-This project is built with:
+## Features
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- Hotel search and filtering
+- Room availability checking
+- Secure booking system
+- User authentication
+- Admin dashboard
+- Hotel manager panel
+- Partner management
+- Multi-language support (English/Arabic)
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Proprietary - All rights reserved

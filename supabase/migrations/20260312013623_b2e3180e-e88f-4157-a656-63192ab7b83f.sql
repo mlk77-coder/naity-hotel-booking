@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX IF NOT EXISTS blocked_dates_hotel_date_unique ON public.blocked_dates (hotel_id, blocked_date);
