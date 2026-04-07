@@ -483,6 +483,74 @@ router.get("/hotels", async (req, res) => {
 });
 
 // ============================================================
+// 📧 POST /api/admin/hotels/:id/send-welcome - إرسال رسالة ترحيب للفندق
+// ============================================================
+router.post("/hotels/:id/send-welcome", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { language } = req.body; // 'ar' or 'en'
+
+    // جلب بيانات الفندق
+    const [hotels] = await db.query("SELECT * FROM hotels WHERE id = ?", [id]);
+    if (!hotels.length) {
+      return res.status(404).json({ success: false, message: "الفندق غير موجود" });
+    }
+
+    const hotel = hotels[0];
+
+    // البحث عن بريد المدير أو استخدام بريد الفندق
+    let contact_email = hotel.email;
+    
+    if (hotel.manager_id) {
+      const [manager] = await db.query("SELECT email FROM users WHERE id = ?", [hotel.manager_id]);
+      if (manager.length && manager[0].email) {
+        contact_email = manager[0].email;
+      }
+    }
+
+    if (!contact_email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: language === 'ar' ? "لا يوجد بريد إلكتروني للفندق" : "No email found for hotel"
+      });
+    }
+
+    // إرسال البريد
+    const { sendHotelWelcome } = require("../utils/mailer");
+    const emailData = {
+      hotel_name: hotel.name_en,
+      hotel_name_ar: hotel.name_ar,
+      contact_email: contact_email,
+      city: hotel.city,
+      stars: hotel.stars,
+      created_at: hotel.created_at,
+      property_type: hotel.property_type || 'hotel' // Pass property type
+    };
+
+    const sent = await sendHotelWelcome(emailData, language || 'ar');
+
+    if (sent) {
+      res.json({ 
+        success: true, 
+        message: language === 'ar' 
+          ? "تم إرسال رسالة الترحيب بنجاح" 
+          : "Welcome email sent successfully"
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: language === 'ar'
+          ? "فشل إرسال البريد الإلكتروني"
+          : "Failed to send email"
+      });
+    }
+  } catch (err) {
+    console.error("Error sending hotel welcome email:", err);
+    res.status(500).json({ success: false, message: "خطأ في الخادم" });
+  }
+});
+
+// ============================================================
 // 🤝 GET /api/admin/tech-partners - جلب قائمة الشركاء للاختيار
 // ============================================================
 router.get("/tech-partners", async (req, res) => {
@@ -730,6 +798,67 @@ router.post("/api-companies", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "خطأ في قاعدة البيانات" });
+  }
+});
+
+// ============================================================
+// 📧 POST /api/admin/api-companies/:id/send-welcome - إرسال رسالة ترحيب
+// ============================================================
+router.post("/api-companies/:id/send-welcome", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { language } = req.body; // 'ar' or 'en'
+
+    // جلب بيانات الشركة
+    const [companies] = await db.query("SELECT * FROM api_companies WHERE id = ?", [id]);
+    if (!companies.length) {
+      return res.status(404).json({ success: false, message: "الشركة غير موجودة" });
+    }
+
+    const company = companies[0];
+
+    if (!company.contact_email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "لا يوجد بريد إلكتروني للشركة" 
+      });
+    }
+
+    // جلب عدد الفنادق المرتبطة
+    const [hotelsCount] = await db.query(
+      "SELECT COUNT(*) as count FROM hotels WHERE company_id = ?",
+      [id]
+    );
+
+    // إرسال البريد
+    const { sendApiCompanyWelcome } = require("../utils/mailer");
+    const emailData = {
+      company_name: language === 'ar' ? (company.name_ar || company.name) : company.name,
+      contact_email: company.contact_email,
+      api_endpoint: company.base_url,
+      hotels_count: hotelsCount[0].count
+    };
+
+    const sent = await sendApiCompanyWelcome(emailData, language || 'ar');
+
+    if (sent) {
+      res.json({ 
+        success: true, 
+        message: language === 'ar' 
+          ? "تم إرسال رسالة الترحيب بنجاح" 
+          : "Welcome email sent successfully"
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: language === 'ar'
+          ? "فشل إرسال البريد الإلكتروني"
+          : "Failed to send email"
+      });
+    }
+  } catch (err) {
+    console.error("Error sending welcome email:", err);
+    res.status(500).json({ success: false, message: "خطأ في الخادم" });
   }
 });
 

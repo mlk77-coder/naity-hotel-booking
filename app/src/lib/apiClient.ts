@@ -56,6 +56,8 @@ class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        mode: 'cors', // Explicitly set CORS mode
+        credentials: 'omit', // Don't send credentials for mobile compatibility
       });
 
       const data = await response.json();
@@ -65,8 +67,14 @@ class ApiClient {
       }
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`API Error [${endpoint}]:`, error);
+      
+      // Better error messages for mobile debugging
+      if (error.message === 'Failed to fetch') {
+        throw new Error('Network error. Please check your internet connection and try again.');
+      }
+      
       throw error;
     }
   }

@@ -141,6 +141,9 @@ const HeroSection = () => {
                       <button type="button" onClick={() => setChildren(Math.min(6, children + 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition"><Plus className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
+                  <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                    ℹ️ {tx("الأطفال 16+ يُحسبون كبالغين", "Children 16+ count as adults")}
+                  </div>
                 </PopoverContent>
               </Popover>
             </div>

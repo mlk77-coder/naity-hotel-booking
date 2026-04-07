@@ -15,15 +15,35 @@ app.use(helmet());
 
 // CORS - السماح للفرونت إند بالوصول
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL,
-    "http://localhost:5173",
-    "http://localhost:8080",  // Added for Vite alternative port
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:8080",
-    // أضف أي domain آخر هنا
-  ],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      "http://localhost:5173",
+      "http://localhost:8080",
+      "http://localhost:3000",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:8080",
+      "https://naity.net",
+      "https://www.naity.net",
+      "capacitor://localhost",  // Capacitor iOS
+      "ionic://localhost",      // Ionic iOS
+      "http://localhost",       // Mobile WebView
+      "file://",                // Mobile WebView file protocol
+    ];
+    
+    // Check if origin is allowed or if it's a mobile app (no origin or special protocols)
+    if (allowedOrigins.indexOf(origin) !== -1 || 
+        origin.startsWith('capacitor://') || 
+        origin.startsWith('ionic://') ||
+        origin.startsWith('file://')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins for mobile compatibility
+    }
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -67,7 +87,9 @@ app.use("/api/bookings", require("./routes/bookings"));
 app.use("/api/search", require("./routes/search"));
 app.use("/api/contact", require("./routes/contact"));
 app.use("/api/admin", require("./routes/admin"));
+app.use("/api/finance", require("./routes/finance"));
 app.use("/api/hotel-panel", require("./routes/hotelPanel"));
+app.use("/api/invoice", require("./routes/invoice"));
 
 // ============================================================
 // 🏠 الصفحة الرئيسية
@@ -86,6 +108,7 @@ app.get("/", (req, res) => {
       contact: "/api/contact",
       admin: "/api/admin",
       hotel_panel: "/api/hotel-panel",
+      invoice: "/api/invoice",
     },
   });
 });

@@ -12,6 +12,20 @@ export default {
         "2xl": "1400px",
       },
     },
+    screens: {
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+      // iPad specific breakpoints
+      'ipad-portrait': '768px',
+      'ipad-landscape': '1024px',
+      'ipad-pro-portrait': '834px',
+      'ipad-pro-11-landscape': '1194px',
+      'ipad-pro-12-portrait': '1024px',
+      'ipad-pro-12-landscape': '1366px',
+    },
     extend: {
       fontFamily: {
         sans: ["Noto Kufi Arabic", "Plus Jakarta Sans", "system-ui", "sans-serif"],

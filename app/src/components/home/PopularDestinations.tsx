@@ -5,11 +5,11 @@ import { MapPin } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { apiClient } from "@/lib/apiClient";
 
-import damascusImg from "@/assets/cities/damascus.jpg";
-import aleppoImg from "@/assets/cities/aleppo.jpg";
-import lattakiaImg from "@/assets/cities/lattakia.jpg";
-import tartusImg from "@/assets/cities/tartus.jpg";
-import homsImg from "@/assets/cities/homs.jpg";
+import damascusImg from "@/assets/cities/damascus.jpeg";
+import aleppoImg from "@/assets/cities/aleppo.jpeg";
+import lattakiaImg from "@/assets/cities/lattakia.jpeg";
+import tartusImg from "@/assets/cities/tartus.jpeg";
+import homsImg from "@/assets/cities/homs.jpeg";
 
 const CITIES = [
   { en: "Damascus",  ar: "دمشق",      img: damascusImg },

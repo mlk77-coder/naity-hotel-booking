@@ -1,0 +1,360 @@
+/**
+ * iPad Optimizations for WebView
+ * Ensures proper display across all iPad models and orientations
+ */
+
+/* Base iPad Optimizations */
+@media only screen and (min-width: 768px) and (max-width: 1366px) {
+  /* Prevent horizontal scrolling */
+  html {
+    overflow-x: hidden;
+    width: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* Optimize touch targets for iPad */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve text readability */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* iPad (9th gen, 8th gen, 7th gen) - 10.2" */
+/* Portrait: 810 x 1080 */
+@media only screen 
+  and (min-device-width: 810px) 
+  and (max-device-width: 810px) 
+  and (orientation: portrait) {
+  
+  .container {
+    max-width: 750px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  /* Adjust grid layouts */
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* iPad (9th gen, 8th gen, 7th gen) - Landscape */
+/* Landscape: 1080 x 810 */
+@media only screen 
+  and (min-device-width: 810px) 
+  and (max-device-width: 1080px) 
+  and (orientation: landscape) {
+  
+  .container {
+    max-width: 1000px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* iPad Air (5th gen, 4th gen) - 10.9" */
+/* Portrait: 820 x 1180 */
+@media only screen 
+  and (min-device-width: 820px) 
+  and (max-device-width: 820px) 
+  and (orientation: portrait) {
+  
+  .container {
+    max-width: 760px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* iPad Air - Landscape */
+/* Landscape: 1180 x 820 */
+@media only screen 
+  and (min-device-width: 820px) 
+  and (max-device-width: 1180px) 
+  and (orientation: landscape) {
+  
+  .container {
+    max-width: 1100px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* iPad Pro 11" (4th gen, 3rd gen, 2nd gen, 1st gen) */
+/* Portrait: 834 x 1194 */
+@media only screen 
+  and (min-device-width: 834px) 
+  and (max-device-width: 834px) 
+  and (orientation: portrait) {
+  
+  .container {
+    max-width: 774px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* iPad Pro 11" - Landscape */
+/* Landscape: 1194 x 834 */
+@media only screen 
+  and (min-device-width: 834px) 
+  and (max-device-width: 1194px) 
+  and (orientation: landscape) {
+  
+  .container {
+    max-width: 1134px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .xl\:grid-cols-5 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* iPad Pro 12.9" (6th gen, 5th gen, 4th gen, 3rd gen) */
+/* Portrait: 1024 x 1366 */
+@media only screen 
+  and (min-device-width: 1024px) 
+  and (max-device-width: 1024px) 
+  and (orientation: portrait) {
+  
+  .container {
+    max-width: 964px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* iPad Pro 12.9" - Landscape */
+/* Landscape: 1366 x 1024 */
+@media only screen 
+  and (min-device-width: 1024px) 
+  and (max-device-width: 1366px) 
+  and (orientation: landscape) {
+  
+  .container {
+    max-width: 1306px;
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .xl\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .xl\:grid-cols-6 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* iPad Mini (6th gen) - 8.3" */
+/* Portrait: 744 x 1133 */
+@media only screen 
+  and (min-device-width: 744px) 
+  and (max-device-width: 744px) 
+  and (orientation: portrait) {
+  
+  .container {
+    max-width: 684px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* iPad Mini - Landscape */
+/* Landscape: 1133 x 744 */
+@media only screen 
+  and (min-device-width: 744px) 
+  and (max-device-width: 1133px) 
+  and (orientation: landscape) {
+  
+  .container {
+    max-width: 1073px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Fix for WebView specific issues */
+@media only screen and (min-width: 768px) and (max-width: 1366px) {
+  /* Prevent zoom on input focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Improve scrolling performance */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fix for fixed positioning in WebView */
+  .fixed {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+
+  /* Optimize images for iPad */
+  img {
+    max-width: 100%;
+    height: auto;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Prevent text selection issues */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Improve button tap response */
+  button, a {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+  }
+
+  /* Fix for safe area insets */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Orientation change handling */
+@media only screen and (min-width: 768px) and (max-width: 1366px) {
+  @supports (orientation: portrait) {
+    html {
+      height: 100%;
+    }
+  }
+
+  @supports (orientation: landscape) {
+    html {
+      height: 100%;
+    }
+  }
+}
+
+/* High DPI iPad displays */
+@media only screen 
+  and (min-width: 768px) 
+  and (max-width: 1366px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+  
+  /* Sharper text rendering */
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+
+  /* Optimize images for retina */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}

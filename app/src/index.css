@@ -73,12 +73,27 @@
     @apply border-border;
   }
 
+  html {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
+  }
+
+  /* Prevent horizontal scroll on all devices */
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
 }
 
@@ -105,5 +120,188 @@
 
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-card;
+  }
+
+  /* Mobile Menu Fix */
+  @media (max-width: 768px) {
+    .container {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    nav {
+      width: 100% !important;
+      max-width: 100vw !important;
+    }
+
+    /* Prevent split screen on mobile menu */
+    body.menu-open {
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+    }
+  }
+}
+
+/* iPad Optimizations */
+@layer utilities {
+  /* iPad Portrait - 768x1024 */
+  @media only screen 
+    and (min-device-width: 768px) 
+    and (max-device-width: 1024px) 
+    and (orientation: portrait) 
+    and (-webkit-min-device-pixel-ratio: 1) {
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  /* iPad Landscape - 1024x768 */
+  @media only screen 
+    and (min-device-width: 768px) 
+    and (max-device-width: 1024px) 
+    and (orientation: landscape) 
+    and (-webkit-min-device-pixel-ratio: 1) {
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  /* iPad Pro 11" Portrait - 834x1194 */
+  @media only screen 
+    and (min-device-width: 834px) 
+    and (max-device-width: 834px) 
+    and (orientation: portrait) 
+    and (-webkit-min-device-pixel-ratio: 2) {
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding-left: 2.5rem;
+      padding-right: 2.5rem;
+    }
+  }
+
+  /* iPad Pro 11" Landscape - 1194x834 */
+  @media only screen 
+    and (min-device-width: 834px) 
+    and (max-device-width: 1194px) 
+    and (orientation: landscape) 
+    and (-webkit-min-device-pixel-ratio: 2) {
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  /* iPad Pro 12.9" Portrait - 1024x1366 */
+  @media only screen 
+    and (min-device-width: 1024px) 
+    and (max-device-width: 1024px) 
+    and (orientation: portrait) 
+    and (-webkit-min-device-pixel-ratio: 2) {
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  /* iPad Pro 12.9" Landscape - 1366x1024 */
+  @media only screen 
+    and (min-device-width: 1024px) 
+    and (max-device-width: 1366px) 
+    and (orientation: landscape) 
+    and (-webkit-min-device-pixel-ratio: 2) {
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding-left: 4rem;
+      padding-right: 4rem;
+    }
+  }
+
+  /* iPad Mini Portrait - 768x1024 */
+  @media only screen 
+    and (min-device-width: 768px) 
+    and (max-device-width: 768px) 
+    and (orientation: portrait) 
+    and (-webkit-min-device-pixel-ratio: 2) {
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  /* iPad Mini Landscape - 1024x768 */
+  @media only screen 
+    and (min-device-width: 768px) 
+    and (max-device-width: 1024px) 
+    and (orientation: landscape) 
+    and (-webkit-min-device-pixel-ratio: 2) {
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
   }
 }

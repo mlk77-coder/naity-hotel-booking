@@ -118,8 +118,8 @@ const BookingForm = () => {
   const [availableExtraRooms, setAvailableExtraRooms] = useState<any[]>([]);
 
   // Children calculations
-  const childrenAsAdults = childrenAges.filter(age => age >= 14).length;
-  const actualChildren = childrenAges.filter(age => age < 14).length;
+  const childrenAsAdults = childrenAges.filter(age => age >= 16).length;
+  const actualChildren = childrenAges.filter(age => age < 16).length;
   const effectiveAdults = guests + childrenAsAdults;
   const totalGuests = effectiveAdults + actualChildren;
   const requiredAdults = actualChildren >= 3 ? Math.ceil(actualChildren / 3) : 1;
@@ -482,7 +482,7 @@ const BookingForm = () => {
                           <option key={i} value={i}>{i} {tx("سنة", "yr")}</option>
                         ))}
                       </select>
-                      {age >= 14 && (
+                      {age >= 16 && (
                         <span className="text-xs text-amber-600 font-medium shrink-0">
                           {tx("← يُحسب بالغ", "← Adult")}
                         </span>
@@ -491,10 +491,19 @@ const BookingForm = () => {
                   ))}
 
                   {childrenAsAdults > 0 && (
-                    <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                    <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 rounded-lg px-3 py-2">
                       ⚠️ {tx(
-                        `${childrenAsAdults} طفل سيُحسب كبالغ (14 سنة فأكثر)`,
-                        `${childrenAsAdults} child counted as adult (14+)`
+                        `${childrenAsAdults} طفل سيُحسب كبالغ (16 سنة فأكثر)`,
+                        `${childrenAsAdults} child counted as adult (16+)`
+                      )}
+                    </p>
+                  )}
+                  
+                  {childrenAges.length > 0 && (
+                    <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                      ℹ️ {tx(
+                        "الأطفال من عمر 16 سنة فأكثر يُحسبون كبالغين",
+                        "Children 16 years and older are counted as adults"
                       )}
                     </p>
                   )}

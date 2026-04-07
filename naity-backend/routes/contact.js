@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 const { v4: uuidv4 } = require("uuid");
+const { sendContactFormEmail, sendReplyToContact } = require("../utils/mailer");
 
 // ============================================================
 // 📧 POST /api/contact - Submit contact form (public)
@@ -19,11 +20,28 @@ router.post("/", async (req, res) => {
 
     const messageId = uuidv4();
 
+    // Save to database
     await db.query(
       `INSERT INTO contact_messages (id, full_name, email, phone, country, subject, message, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
       [messageId, full_name, email, phone || null, country || null, subject || 'other', message]
     );
+
+    // Send email to support@naity.net
+    try {
+      await sendContactFormEmail({
+        full_name,
+        email,
+        phone,
+        country,
+        subject,
+        message
+      });
+      console.log(`✅ Contact form email sent for message ID: ${messageId}`);
+    } catch (emailErr) {
+      console.error("⚠️ Failed to send email, but message saved:", emailErr.message);
+      // Don't fail the request if email fails - message is still saved in DB
+    }
 
     res.status(201).json({
       success: true,
@@ -138,6 +156,72 @@ router.delete("/:id", async (req, res) => {
   } catch (err) {
     console.error("Error in DELETE /api/contact/:id:", err);
     res.status(500).json({ success: false, message: "خطأ في قاعدة البيانات" });
+  }
+});
+
+// ============================================================
+// 📧 POST /api/contact/:id/reply - Reply to contact message
+// ============================================================
+router.post("/:id/reply", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reply_message, admin_name } = req.body;
+
+    if (!reply_message || !reply_message.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "يجب إدخال نص الرد / Reply message is required",
+      });
+    }
+
+    // Get original message details
+    const [messages] = await db.query(
+      "SELECT * FROM contact_messages WHERE id = ?",
+      [id]
+    );
+
+    if (!messages || messages.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "الرسالة غير موجودة / Message not found",
+      });
+    }
+
+    const originalMessage = messages[0];
+
+    // Send reply email
+    try {
+      await sendReplyToContact({
+        recipient_email: originalMessage.email,
+        recipient_name: originalMessage.full_name,
+        original_message: originalMessage.message,
+        reply_message: reply_message.trim(),
+        admin_name: admin_name || "Naity Support Team",
+      });
+
+      // Update message as replied
+      await db.query(
+        "UPDATE contact_messages SET replied_at = NOW(), is_read = 1 WHERE id = ?",
+        [id]
+      );
+
+      res.json({
+        success: true,
+        message: "تم إرسال الرد بنجاح / Reply sent successfully",
+      });
+    } catch (emailErr) {
+      console.error("Failed to send reply email:", emailErr);
+      res.status(500).json({
+        success: false,
+        message: "فشل إرسال البريد / Failed to send email",
+      });
+    }
+  } catch (err) {
+    console.error("Error in POST /api/contact/:id/reply:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "خطأ في قاعدة البيانات / Database error" 
+    });
   }
 });
 

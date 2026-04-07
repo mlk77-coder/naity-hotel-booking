@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X, Globe, LogIn, LayoutDashboard, Ticket } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import naityLogo from "@/assets/naity-logo.png";
@@ -11,6 +11,22 @@ const Navbar = () => {
   const { t, lang, setLang } = useI18n();
   const { user, role } = useAuth();
 
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (open) {
+      document.body.classList.add('menu-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('menu-open');
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.classList.remove('menu-open');
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   const navLinks = [
     { to: "/", label: t("nav.home") },
     { to: "/hotels", label: t("nav.hotels") },
@@ -21,8 +37,8 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border/50">
-      <div className="container mx-auto flex items-center justify-between h-16 px-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border/50 w-full">
+      <div className="container mx-auto flex items-center justify-between h-16 px-4 max-w-full">
         <Link to="/" className="flex items-center gap-2">
           <img src={naityLogo} alt="Naity" className="h-10 w-auto" />
           <span className="text-xl font-bold text-accent">Naity</span>
@@ -99,8 +115,8 @@ const Navbar = () => {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-border bg-card animate-fade-in overflow-hidden">
-          <div className="container mx-auto px-4 py-3 flex flex-col gap-1 overflow-x-hidden">
+        <div className="md:hidden fixed left-0 right-0 top-16 border-t border-border bg-card animate-fade-in w-full max-h-[calc(100vh-4rem)] overflow-y-auto overflow-x-hidden z-50">
+          <div className="w-full px-4 py-3 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
@@ -116,15 +132,15 @@ const Navbar = () => {
               </Link>
             ))}
             <Link to="/my-bookings" onClick={() => setOpen(false)}
-              className="px-4 py-2.5 rounded-lg text-sm font-semibold bg-primary/5 border border-primary/20 text-primary flex items-center gap-2">
+              className="px-4 py-2.5 rounded-lg text-sm font-semibold bg-primary/5 border border-primary/20 text-primary flex items-center gap-2 w-full">
               <Ticket className="w-4 h-4" /> {t("nav.myBookings")}
             </Link>
             {user ? (
-              <Link to="/dashboard" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1">
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1 w-full">
                 <LayoutDashboard className="w-4 h-4" /> {lang === "ar" ? "لوحة التحكم" : "Dashboard"}
               </Link>
             ) : (
-              <Link to="/login" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1">
+              <Link to="/login" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1 w-full">
                 <LogIn className="w-4 h-4" /> {lang === "ar" ? "تسجيل الدخول" : "Login"}
               </Link>
             )}

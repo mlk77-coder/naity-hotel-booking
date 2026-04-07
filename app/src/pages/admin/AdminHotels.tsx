@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight, Clock } from "lucide-react";
+import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight, Clock, Wifi, Zap, Droplet, Car, Waves, Thermometer, Mail, Loader2 } from "lucide-react";
 import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
 import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
 
@@ -21,11 +22,21 @@ const AdminHotels = () => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
+  const [emailLanguageDialog, setEmailLanguageDialog] = useState<any | null>(null);
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
   const [form, setForm] = useState<any>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
     contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null,
+    amenities: {
+      wifi: false,
+      air_conditioning: false,
+      hot_water_24h: false,
+      parking: false,
+      pool: false,
+      heating_cooling: false,
+    }
   });
 
   const { data: techPartners = [] } = useQuery({
@@ -126,8 +137,40 @@ const AdminHotels = () => {
     },
   });
 
+  const sendWelcomeEmail = async (hotel: any, language: 'ar' | 'en') => {
+    setSendingEmailId(hotel.id);
+    setEmailLanguageDialog(null);
+    try {
+      const response: any = await apiClient.post(`/api/admin/hotels/${hotel.id}/send-welcome`, { language });
+      
+      if (response.success) {
+        const hotelName = language === 'ar' ? (hotel.name_ar || hotel.name_en) : hotel.name_en;
+        toast.success(
+          tx("✅ تم إرسال البريد بنجاح", "✅ Email sent successfully"),
+          { description: tx(`تم إرسال رسالة الترحيب لـ ${hotelName}`, `Welcome email sent to ${hotelName}`) }
+        );
+      } else {
+        toast.error(tx("❌ فشل إرسال البريد", "❌ Failed to send email"));
+      }
+    } catch (e: any) {
+      toast.error(tx("❌ خطأ", "❌ Error"), { description: e.message });
+    }
+    setSendingEmailId(null);
+  };
+
   const resetForm = () => {
-    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null });
+    setForm({ 
+      name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", 
+      contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null,
+      amenities: {
+        wifi: false,
+        air_conditioning: false,
+        hot_water_24h: false,
+        parking: false,
+        pool: false,
+        heating_cooling: false,
+      }
+    });
     setEditing(null);
   };
 
@@ -142,6 +185,14 @@ const AdminHotels = () => {
       tech_partner_id: (hotel as any).tech_partner_id ?? null,
       company_id: (hotel as any).company_id ?? null,
       external_hotel_id: (hotel as any).external_hotel_id ?? null,
+      amenities: (hotel as any).amenities ? (typeof (hotel as any).amenities === 'string' ? JSON.parse((hotel as any).amenities) : (hotel as any).amenities) : {
+        wifi: false,
+        air_conditioning: false,
+        hot_water_24h: false,
+        parking: false,
+        pool: false,
+        heating_cooling: false,
+      }
     });
     setOpen(true);
   };
@@ -268,6 +319,85 @@ const AdminHotels = () => {
                   <Label>Description (English)</Label>
                   <Textarea value={form.description_en ?? ""} onChange={(e) => setForm(f => ({ ...f, description_en: e.target.value }))} />
                 </div>
+
+                {/* Amenities Checklist */}
+                <div className="space-y-3 border-t border-border pt-4">
+                  <Label className="text-base font-semibold">{tx("المرافق والخدمات", "Facilities & Services")}</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* WiFi */}
+                    <label className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition">
+                      <input
+                        type="checkbox"
+                        checked={form.amenities?.wifi ?? false}
+                        onChange={(e) => setForm(f => ({ ...f, amenities: { ...f.amenities, wifi: e.target.checked } }))}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <Wifi className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-foreground">{tx("واي فاي", "WiFi")}</span>
+                    </label>
+
+                    {/* Air Conditioning */}
+                    <label className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition">
+                      <input
+                        type="checkbox"
+                        checked={form.amenities?.air_conditioning ?? false}
+                        onChange={(e) => setForm(f => ({ ...f, amenities: { ...f.amenities, air_conditioning: e.target.checked } }))}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <Zap className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-foreground">{tx("كهرباء 24 ساعة", "24h Electricity")}</span>
+                    </label>
+
+                    {/* Hot Water 24h */}
+                    <label className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition">
+                      <input
+                        type="checkbox"
+                        checked={form.amenities?.hot_water_24h ?? false}
+                        onChange={(e) => setForm(f => ({ ...f, amenities: { ...f.amenities, hot_water_24h: e.target.checked } }))}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <Droplet className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-foreground">{tx("مياه ساخنة 24 ساعة", "Hot Water 24h")}</span>
+                    </label>
+
+                    {/* Parking */}
+                    <label className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition">
+                      <input
+                        type="checkbox"
+                        checked={form.amenities?.parking ?? false}
+                        onChange={(e) => setForm(f => ({ ...f, amenities: { ...f.amenities, parking: e.target.checked } }))}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <Car className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-foreground">{tx("كراج / موقف", "Parking")}</span>
+                    </label>
+
+                    {/* Pool */}
+                    <label className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition">
+                      <input
+                        type="checkbox"
+                        checked={form.amenities?.pool ?? false}
+                        onChange={(e) => setForm(f => ({ ...f, amenities: { ...f.amenities, pool: e.target.checked } }))}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <Waves className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-foreground">{tx("مسبح", "Pool")}</span>
+                    </label>
+
+                    {/* Heating/Cooling */}
+                    <label className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition">
+                      <input
+                        type="checkbox"
+                        checked={form.amenities?.heating_cooling ?? false}
+                        onChange={(e) => setForm(f => ({ ...f, amenities: { ...f.amenities, heating_cooling: e.target.checked } }))}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <Thermometer className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-foreground">{tx("مكيف وتدفئة", "AC & Heating")}</span>
+                    </label>
+                  </div>
+                </div>
+
                 <Button type="submit" className="w-full gradient-cta" disabled={saveMutation.isPending}>
                   {saveMutation.isPending ? "..." : editing ? tx("تحديث", "Update") : tx("إضافة", "Add")}
                 </Button>
@@ -342,6 +472,19 @@ const AdminHotels = () => {
                           onCheckedChange={(v) => toggleManualMode.mutate({ id: hotel.id, manual_mode: v })}
                         />
                       </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setEmailLanguageDialog(hotel)}
+                        disabled={sendingEmailId === hotel.id}
+                        title={tx("إرسال رسالة ترحيب", "Send Welcome Email")}
+                      >
+                        {sendingEmailId === hotel.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Mail className="w-4 h-4 text-blue-500" />
+                        )}
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => openEdit(hotel)}>
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -362,6 +505,53 @@ const AdminHotels = () => {
           </div>
         )}
       </div>
+
+      {/* ── Email Language Selection Dialog ──────────────────────────── */}
+      <AlertDialog open={!!emailLanguageDialog} onOpenChange={open => !open && setEmailLanguageDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              {tx("إرسال رسالة ترحيب", "Send Welcome Email")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {tx(
+                `اختر لغة البريد الإلكتروني لـ "${emailLanguageDialog?.name_ar || emailLanguageDialog?.name_en}"`,
+                `Choose email language for "${emailLanguageDialog?.name_en}"`
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button 
+              onClick={() => emailLanguageDialog && sendWelcomeEmail(emailLanguageDialog, 'ar')}
+              className="w-full justify-start h-auto py-4"
+              variant="outline"
+            >
+              <div className="text-right w-full">
+                <div className="font-bold text-base">🇸🇾 العربية</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  مرحباً بك في Naity – فندقك أصبح متاحاً الآن!
+                </div>
+              </div>
+            </Button>
+            <Button 
+              onClick={() => emailLanguageDialog && sendWelcomeEmail(emailLanguageDialog, 'en')}
+              className="w-full justify-start h-auto py-4"
+              variant="outline"
+            >
+              <div className="text-left w-full">
+                <div className="font-bold text-base">🇬🇧 English</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Welcome to Naity - Your Hotel is Now Live!
+                </div>
+              </div>
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tx("إلغاء", "Cancel")}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };

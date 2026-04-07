@@ -257,6 +257,29 @@ router.post("/", authMiddleware, adminOnly, async (req, res) => {
       ]
     );
 
+    // 📧 إرسال رسالة ترحيب تلقائية للفندق (إذا كان هناك بريد إلكتروني)
+    if (contact_email) {
+      try {
+        const { sendHotelWelcome } = require("../utils/mailer");
+        const emailData = {
+          hotel_name: name_en,
+          hotel_name_ar: name_ar,
+          contact_email: contact_email,
+          city: city,
+          stars: stars,
+          created_at: new Date(),
+          property_type: property_type // Pass property type for apartment/hotel detection
+        };
+        
+        // إرسال بالعربية افتراضياً (يمكن تغييره حسب تفضيلات الفندق)
+        await sendHotelWelcome(emailData, 'ar');
+        console.log(`✅ Welcome email sent to new ${property_type}: ${name_en}`);
+      } catch (emailError) {
+        console.error("❌ Failed to send welcome email:", emailError.message);
+        // لا نوقف العملية إذا فشل إرسال البريد
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: "تم إضافة الفندق بنجاح",
@@ -279,6 +302,11 @@ router.put("/:id", authMiddleware, adminOnly, async (req, res) => {
     delete fields.created_at;
 
     fields.updated_at = new Date();
+
+    // Convert amenities object to JSON string if present
+    if (fields.amenities && typeof fields.amenities === 'object') {
+      fields.amenities = JSON.stringify(fields.amenities);
+    }
 
     const keys = Object.keys(fields);
     if (!keys.length) {

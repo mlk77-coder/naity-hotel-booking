@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/apiClient";
 import naityLogo from "@/assets/naity-logo.png";
 import {
   Hotel, Users, BookOpen, LogOut, LayoutDashboard, Settings,
-  Menu, X, Globe, ChevronLeft, Activity, MessageSquare, Handshake, Plug, UserCog
+  Menu, X, Globe, ChevronLeft, Activity, MessageSquare, Handshake, Plug, UserCog, DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Lock body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.classList.remove('menu-open');
+    }
+    return () => {
+      document.body.classList.remove('menu-open');
+    };
+  }, [sidebarOpen]);
 
   useEffect(() => {
     // Fetch unread messages count
@@ -44,6 +56,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { to: "/admin/api-companies", icon: Plug, label: lang === "ar" ? "شركات API" : "API Companies" },
     { to: "/admin/messages", icon: MessageSquare, label: lang === "ar" ? "الرسائل" : "Messages", badge: unreadCount },
     { to: "/admin/users", icon: UserCog, label: lang === "ar" ? "المستخدمون" : "Users" },
+    { to: "/admin/finance", icon: DollarSign, label: lang === "ar" ? "التوزيع المالي" : "Financial Distribution" },
     { to: "/admin/sync", icon: Activity, label: lang === "ar" ? "إعدادات المزامنة" : "Sync Settings" },
   ];
 
@@ -104,7 +117,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   );
 
   return (
-    <div className={`min-h-screen flex bg-background ${lang === "ar" ? "flex-row" : "flex-row"}`} dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className={`min-h-screen flex bg-background w-full max-w-full ${lang === "ar" ? "flex-row" : "flex-row"}`} dir={lang === "ar" ? "rtl" : "ltr"}>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-64 bg-accent text-accent-foreground flex-col shrink-0">
         <SidebarContent />
@@ -112,18 +125,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-[99] lg:hidden">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <aside className={`fixed top-0 ${lang === "ar" ? "right-0" : "left-0"} w-64 h-full bg-accent text-accent-foreground flex flex-col z-[100]`}>
+        <div className="fixed inset-0 z-[99] lg:hidden w-full">
+          <div className="fixed inset-0 bg-black/50 w-full" onClick={() => setSidebarOpen(false)} />
+          <aside className={`fixed top-0 ${lang === "ar" ? "right-0" : "left-0"} w-full max-w-[280px] h-full bg-accent text-accent-foreground flex flex-col z-[100]`}>
             <SidebarContent />
           </aside>
         </div>
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen w-full max-w-full">
         {/* Mobile header */}
-        <header className="lg:hidden bg-card border-b border-border/50 px-4 py-3 flex items-center justify-between">
+        <header className="lg:hidden bg-card border-b border-border/50 px-4 py-3 flex items-center justify-between w-full">
           <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-muted">
             <Menu className="w-5 h-5 text-foreground" />
           </button>
@@ -136,7 +149,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           </Button>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-auto w-full">
           {children}
         </main>
       </div>

@@ -3,13 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail, Star, StarOff, Eye, EyeOff,
   Trash2, ChevronDown, ChevronUp,
-  Search, RefreshCw
+  Search, RefreshCw, Send
 } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
 import AdminLayout from "./AdminLayout";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const SUBJECT_LABELS: Record<string, { ar: string; en: string }> = {
   booking_issue: { ar: "مشكلة حجز", en: "Booking Issue" },
@@ -57,6 +59,10 @@ export default function AdminMessages() {
   const [search, setSearch] = useState("");
   const [filterSubject, setFilterSubject] = useState("all");
   const [filterRead, setFilterRead] = useState("all");
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ContactMessage | null>(null);
+  const [replyMessage, setReplyMessage] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   const fetchMessages = async () => {
     setLoading(true);
@@ -107,6 +113,49 @@ export default function AdminMessages() {
     await apiClient.delete(`/api/contact/${id}`);
     setMessages((prev) => prev.filter((m) => m.id !== id));
     toast.success(tx("تم الحذف", "Deleted"));
+  };
+
+  const openReplyDialog = (msg: ContactMessage) => {
+    setReplyingTo(msg);
+    setReplyMessage("");
+    setReplyDialogOpen(true);
+  };
+
+  const sendReply = async () => {
+    if (!replyingTo || !replyMessage.trim()) {
+      toast.error(tx("يجب إدخال نص الرد", "Please enter reply message"));
+      return;
+    }
+
+    setSendingReply(true);
+    try {
+      const response: any = await apiClient.post(`/api/contact/${replyingTo.id}/reply`, {
+        reply_message: replyMessage.trim(),
+        admin_name: "Naity Support Team"
+      });
+
+      if (response.success) {
+        toast.success(tx("تم إرسال الرد بنجاح", "Reply sent successfully"));
+        setReplyDialogOpen(false);
+        setReplyMessage("");
+        
+        // Update message as replied
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === replyingTo.id
+              ? { ...m, replied_at: new Date().toISOString(), is_read: true }
+              : m
+          )
+        );
+      } else {
+        throw new Error(response.message || "Failed to send reply");
+      }
+    } catch (error: any) {
+      console.error("Error sending reply:", error);
+      toast.error(error.message || tx("فشل إرسال الرد", "Failed to send reply"));
+    } finally {
+      setSendingReply(false);
+    }
   };
 
   return (
@@ -366,13 +415,34 @@ export default function AdminMessages() {
                               </p>
                             </div>
 
-                            <a
-                              href={`mailto:${msg.email}?subject=Re: ${msg.subject}`}
-                              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
-                            >
-                              <Mail className="w-4 h-4" />
-                              {tx("رد عبر البريد", "Reply via Email")}
-                            </a>
+                            {msg.replied_at && (
+                              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3">
+                                <p className="text-sm text-green-700 dark:text-green-400 flex items-center gap-2">
+                                  <span className="text-lg">✅</span>
+                                  <span>
+                                    {tx("تم الرد على هذه الرسالة في", "Replied on")} {format(new Date(msg.replied_at), "dd/MM/yyyy HH:mm")}
+                                  </span>
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => openReplyDialog(msg)}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
+                              >
+                                <Send className="w-4 h-4" />
+                                {tx("رد مباشر من الموقع", "Reply from Website")}
+                              </button>
+                              
+                              <a
+                                href={`mailto:${msg.email}?subject=Re: ${msg.subject}`}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition"
+                              >
+                                <Mail className="w-4 h-4" />
+                                {tx("رد عبر البريد الخارجي", "Reply via External Email")}
+                              </a>
+                            </div>
                           </div>
                         </motion.div>
                       )}
@@ -384,6 +454,102 @@ export default function AdminMessages() {
           </div>
         )}
       </div>
+
+      {/* Reply Dialog */}
+      <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5 text-primary" />
+              {tx("رد على الرسالة", "Reply to Message")}
+            </DialogTitle>
+          </DialogHeader>
+
+          {replyingTo && (
+            <div className="space-y-4">
+              {/* Original Message Info */}
+              <div className="bg-muted rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-semibold text-foreground">{tx("من:", "From:")}</span>
+                  <span className="text-muted-foreground">{replyingTo.full_name}</span>
+                  <span className="text-muted-foreground">({replyingTo.email})</span>
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold text-foreground">{tx("الموضوع:", "Subject:")}</span>
+                  <span className="text-muted-foreground ml-2">
+                    {lang === "ar" 
+                      ? SUBJECT_LABELS[replyingTo.subject]?.ar 
+                      : SUBJECT_LABELS[replyingTo.subject]?.en}
+                  </span>
+                </div>
+              </div>
+
+              {/* Original Message */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  {tx("الرسالة الأصلية:", "Original Message:")}
+                </label>
+                <div className="bg-muted/50 rounded-xl p-4 border-l-4 border-border">
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {replyingTo.message}
+                  </p>
+                </div>
+              </div>
+
+              {/* Reply Message */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  {tx("ردك:", "Your Reply:")} *
+                </label>
+                <textarea
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  placeholder={tx(
+                    "اكتب ردك هنا... سيتم إرساله مباشرة إلى بريد العميل",
+                    "Write your reply here... It will be sent directly to the customer's email"
+                  )}
+                  className="w-full min-h-[200px] bg-muted rounded-xl px-4 py-3 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition resize-y"
+                  dir="auto"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {tx(
+                    "💡 سيتم إرسال الرد مباشرة إلى بريد العميل مع نسخة من رسالته الأصلية",
+                    "💡 The reply will be sent directly to the customer's email with a copy of their original message"
+                  )}
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 justify-end pt-4 border-t border-border">
+                <Button
+                  variant="outline"
+                  onClick={() => setReplyDialogOpen(false)}
+                  disabled={sendingReply}
+                >
+                  {tx("إلغاء", "Cancel")}
+                </Button>
+                <Button
+                  onClick={sendReply}
+                  disabled={sendingReply || !replyMessage.trim()}
+                  className="gradient-cta"
+                >
+                  {sendingReply ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      {tx("جاري الإرسال...", "Sending...")}
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      {tx("إرسال الرد", "Send Reply")}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

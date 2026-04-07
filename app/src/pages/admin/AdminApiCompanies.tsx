@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   Plus, Copy, Eye, EyeOff, RefreshCw, Trash2, Edit, Plug, Loader2,
-  Hotel, Link2, Unlink, PackageOpen, FileText, Wifi, WifiOff, Zap
+  Hotel, Link2, Unlink, PackageOpen, FileText, Wifi, WifiOff, Zap, Mail
 } from "lucide-react";
 
 interface ApiCompany {
@@ -137,6 +137,8 @@ export default function AdminApiCompanies() {
   // Testing/syncing states
   const [testingId, setTestingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
+  const [emailLanguageDialog, setEmailLanguageDialog] = useState<ApiCompany | null>(null);
 
   const fetchCompanies = async () => {
     setLoading(true);
@@ -270,6 +272,26 @@ export default function AdminApiCompanies() {
     setSyncingId(null);
   };
 
+  const sendWelcomeEmail = async (c: ApiCompany, language: 'ar' | 'en') => {
+    setSendingEmailId(c.id);
+    setEmailLanguageDialog(null);
+    try {
+      const response: any = await apiClient.post(`/api/admin/api-companies/${c.id}/send-welcome`, { language });
+      
+      if (response.success) {
+        toast({
+          title: isAr ? "✅ تم إرسال البريد بنجاح" : "✅ Email sent successfully",
+          description: isAr ? `تم إرسال رسالة الترحيب إلى ${c.contact_email}` : `Welcome email sent to ${c.contact_email}`
+        });
+      } else {
+        toast({ title: isAr ? "❌ فشل إرسال البريد" : "❌ Failed to send email", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: isAr ? "❌ خطأ" : "❌ Error", description: e.message, variant: "destructive" });
+    }
+    setSendingEmailId(null);
+  };
+
   const linkHotel = async () => {
     if (!linkHotelId || !linkExternalId || !hotelsCompany) return;
     await apiClient.post(`/api/admin/api-companies/${hotelsCompany.id}/link-hotel`, {
@@ -399,6 +421,15 @@ export default function AdminApiCompanies() {
                           title={isAr ? "مزامنة الكل" : "Sync All Hotels"}
                         >
                           {syncingId === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => setEmailLanguageDialog(c)} 
+                          disabled={!c.contact_email || sendingEmailId === c.id}
+                          title={isAr ? "إرسال رسالة ترحيب" : "Send Welcome Email"}
+                        >
+                          {sendingEmailId === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4 text-blue-500" />}
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => openHotelsDialog(c)} title={isAr ? "الفنادق" : "Hotels"}>
                           <Hotel className="w-4 h-4" />
@@ -708,6 +739,55 @@ export default function AdminApiCompanies() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{isAr ? "إغلاق" : "Close"}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Email Language Selection ──────────────────────────── */}
+      <AlertDialog open={!!emailLanguageDialog} onOpenChange={open => !open && setEmailLanguageDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              {isAr ? "إرسال رسالة ترحيب" : "Send Welcome Email"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isAr 
+                ? `اختر لغة البريد الإلكتروني لـ "${emailLanguageDialog?.name}"`
+                : `Choose email language for "${emailLanguageDialog?.name}"`}
+              <div className="mt-2 text-sm">
+                📧 {emailLanguageDialog?.contact_email}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button 
+              onClick={() => emailLanguageDialog && sendWelcomeEmail(emailLanguageDialog, 'ar')}
+              className="w-full justify-start h-auto py-4"
+              variant="outline"
+            >
+              <div className="text-right w-full">
+                <div className="font-bold text-base">🇸🇾 العربية</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  مرحباً بك في Naity - لنبدأ الآن
+                </div>
+              </div>
+            </Button>
+            <Button 
+              onClick={() => emailLanguageDialog && sendWelcomeEmail(emailLanguageDialog, 'en')}
+              className="w-full justify-start h-auto py-4"
+              variant="outline"
+            >
+              <div className="text-left w-full">
+                <div className="font-bold text-base">🇬🇧 English</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Welcome to Naity - Let's Get Started
+                </div>
+              </div>
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isAr ? "إلغاء" : "Cancel"}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

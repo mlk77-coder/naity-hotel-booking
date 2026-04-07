@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Search, Calendar, MapPin, Star, Users,
-         ChevronDown, ChevronUp, Copy, Check, AlertTriangle, XCircle } from "lucide-react";
-import { apiClient } from "@/lib/apiClient";
+         ChevronDown, ChevronUp, Copy, Check, AlertTriangle, XCircle, Download } from "lucide-react";
+import { apiClient, API_BASE_URL } from "@/lib/apiClient";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
@@ -47,7 +47,7 @@ const STATUS_CONFIG: Record<string, { ar: string; en: string; classes: string; d
   },
 };
 
-function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, onCancel }: any) {
+function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, onCancel, onDownloadInvoice }: any) {
   const hotel = b.hotels;
   const room = b.room_categories;
   const name = lang === "ar" ? hotel?.name_ar : hotel?.name_en;
@@ -179,6 +179,16 @@ function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, o
               </p>
               <p className="text-xs font-mono text-primary font-bold">{b.id.slice(0, 8).toUpperCase()}</p>
             </div>
+            
+            {/* Download Invoice Button */}
+            {["confirmed", "active", "completed"].includes(b.status) && (
+              <button onClick={() => onDownloadInvoice?.(b.id)}
+                className="w-full gradient-cta text-primary-foreground px-4 py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity mt-3">
+                <Download className="w-4 h-4" />
+                {tx("تحميل الفاتورة PDF", "Download Invoice PDF")}
+              </button>
+            )}
+            
             {/* Cancel button */}
             {["confirmed", "pending"].includes(b.status) && (
               <button onClick={() => onCancel?.(b)}
@@ -275,10 +285,32 @@ export default function MyBookings() {
     setCancelling(false);
   };
 
+  const handleDownloadInvoice = async (bookingId: string) => {
+    try {
+      toast.loading(tx("جاري تحميل الفاتورة...", "Generating invoice..."));
+      
+      // Create a temporary link to download the PDF
+      const url = `${API_BASE_URL}/api/invoice/${bookingId}`;
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${bookingId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.dismiss();
+      toast.success(tx("تم تحميل الفاتورة بنجاح", "Invoice downloaded successfully"));
+    } catch (error: any) {
+      toast.dismiss();
+      console.error('Error downloading invoice:', error);
+      toast.error(error.message ?? tx("حدث خطأ في تحميل الفاتورة", "Failed to download invoice"));
+    }
+  };
+
   const upcomingBookings = bookings?.filter(b => ["confirmed", "active", "pending"].includes(b.status)) ?? [];
   const pastBookings = bookings?.filter(b => ["expired", "completed", "cancelled"].includes(b.status)) ?? [];
 
-  const cardProps = { lang, tx, expandedId, setExpandedId, copiedId, copy, onCancel: openCancelDialog };
+  const cardProps = { lang, tx, expandedId, setExpandedId, copiedId, copy, onCancel: openCancelDialog, onDownloadInvoice: handleDownloadInvoice };
 
   return (
     <Layout>

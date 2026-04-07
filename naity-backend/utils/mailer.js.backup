@@ -1,33 +1,15 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-// إعداد المُرسِل - للإيميلات العامة (حجوزات، ترحيب، إلخ)
+// إعداد المُرسِل
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
   port: parseInt(process.env.MAIL_PORT) || 465,
-  secure: true, // true for 465, false for other ports
+  secure: true,
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
   },
-  tls: {
-    // Do not fail on invalid certs (for shared hosting)
-    rejectUnauthorized: false
-  }
-});
-
-// إعداد المُرسِل - لنموذج التواصل (Contact Form)
-const supportTransporter = nodemailer.createTransport({
-  host: process.env.SUPPORT_MAIL_HOST || process.env.MAIL_HOST,
-  port: parseInt(process.env.SUPPORT_MAIL_PORT || process.env.MAIL_PORT) || 465,
-  secure: parseInt(process.env.SUPPORT_MAIL_PORT || process.env.MAIL_PORT) === 465, // true for 465, false for 587
-  auth: {
-    user: process.env.SUPPORT_MAIL_USER,
-    pass: process.env.SUPPORT_MAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
 });
 
 // ✅ إرسال تأكيد الحجز للعميل
@@ -191,8 +173,8 @@ const sendContactFormEmail = async (contactData) => {
   };
 
   const mailOptions = {
-    from: process.env.SUPPORT_MAIL_FROM || process.env.MAIL_FROM,
-    to: process.env.SUPPORT_MAIL_TO || "support@naity.com",
+    from: process.env.MAIL_FROM,
+    to: "support@naity.net",
     replyTo: email,
     subject: `📧 رسالة جديدة من ${full_name} - ${subjectLabels[subject] || subject}`,
     html: `
@@ -255,8 +237,8 @@ const sendContactFormEmail = async (contactData) => {
   };
 
   try {
-    await supportTransporter.sendMail(mailOptions);
-    console.log(`📧 Contact form email sent to ${process.env.SUPPORT_MAIL_TO} from ${email}`);
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Contact form email sent to support@naity.net from ${email}`);
     return true;
   } catch (err) {
     console.error("❌ Failed to send contact form email:", err.message);
@@ -269,9 +251,8 @@ const sendReplyToContact = async (replyData) => {
   const { recipient_email, recipient_name, original_message, reply_message, admin_name } = replyData;
 
   const mailOptions = {
-    from: process.env.SUPPORT_MAIL_FROM || process.env.MAIL_FROM,
+    from: process.env.MAIL_FROM,
     to: recipient_email,
-    replyTo: process.env.SUPPORT_MAIL_USER || process.env.MAIL_USER,
     subject: `رد من فريق Naity - Reply from Naity Team`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
@@ -326,8 +307,8 @@ const sendReplyToContact = async (replyData) => {
   };
 
   try {
-    await supportTransporter.sendMail(mailOptions);
-    console.log(`📧 Reply email sent to ${recipient_email} from support@naity.net`);
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Reply email sent to ${recipient_email}`);
     return true;
   } catch (err) {
     console.error("❌ Failed to send reply email:", err.message);
@@ -636,6 +617,274 @@ const sendHotelWelcome = async (hotelData, language = 'ar') => {
     return true;
   } catch (err) {
     console.error("❌ Failed to send welcome email:", err.message);
+    return false;
+  }
+};
+
+  const isArabic = language === 'ar';
+  const displayName = isArabic ? (hotel_name_ar || hotel_name) : hotel_name;
+
+  const mailOptions = {
+    from: process.env.MAIL_FROM,
+    to: contact_email,
+    subject: isArabic 
+      ? `مرحباً بك في Naity – فندقك أصبح متاحاً الآن! 🏨`
+      : `Welcome to Naity - Your Hotel is Now Live! 🏨`,
+    html: isArabic ? `
+      <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; padding: 0; background: #ffffff;">
+        <!-- Header with gradient -->
+        <div style="background: linear-gradient(135deg, #1a56db 0%, #0369a1 100%); padding: 40px 30px; text-align: center; border-radius: 0;">
+          <h1 style="color: #ffffff; font-size: 36px; margin: 0 0 10px; font-weight: 700;">🏨 Naity</h1>
+          <p style="color: #e0f2fe; margin: 0; font-size: 16px; font-weight: 500;">منصة حجز الفنادق الرائدة في سوريا</p>
+        </div>
+
+        <!-- Main content -->
+        <div style="padding: 40px 30px;">
+          <!-- Welcome message -->
+          <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 30px; margin-bottom: 30px; border-right: 5px solid #1a56db;">
+            <h2 style="color: #0369a1; margin: 0 0 15px; font-size: 28px; font-weight: 700;">عزيزي فريق ${displayName}! 🎉</h2>
+            <p style="color: #0c4a6e; margin: 0; font-size: 16px; line-height: 1.8;">
+              <strong>مرحباً بكم في Naity!</strong> يسعدنا انضمامكم إلينا.
+            </p>
+            <p style="color: #0c4a6e; margin: 15px 0 0; font-size: 16px; line-height: 1.8;">
+              تم تسجيل فندقكم بنجاح وهو الآن ظاهر لآلاف المسافرين الباحثين عن أماكن إقامة في مختلف أنحاء سوريا.
+            </p>
+          </div>
+
+          <!-- Hotel details -->
+          <div style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+            <h3 style="color: #1e293b; margin: 0 0 20px; font-size: 20px; font-weight: 700; border-bottom: 2px solid #1a56db; padding-bottom: 10px;">
+              📋 تفاصيل الفندق
+            </h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #475569; font-size: 15px;">
+                  🏨 اسم الفندق
+                </td>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 15px; font-weight: 600;">
+                  ${displayName}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #475569; font-size: 15px;">
+                  📍 الموقع
+                </td>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 15px; font-weight: 600;">
+                  ${city || 'سوريا'}
+                </td>
+              </tr>
+              ${stars ? `<tr>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #475569; font-size: 15px;">
+                  ⭐ التصنيف
+                </td>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 15px; font-weight: 600;">
+                  ${'⭐'.repeat(stars)}
+                </td>
+              </tr>` : ''}
+              <tr>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #475569; font-size: 15px;">
+                  ✅ الحالة
+                </td>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9;">
+                  <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-block;">
+                    🟢 نشط
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 15px 10px; font-weight: 600; color: #475569; font-size: 15px;">
+                  📅 تاريخ التسجيل
+                </td>
+                <td style="padding: 15px 10px; color: #1e293b; font-size: 15px;">
+                  ${new Date(created_at || Date.now()).toLocaleDateString('ar-SY')}
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- What you can do -->
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 12px; padding: 25px; margin-bottom: 30px; border-right: 5px solid #10b981;">
+            <h3 style="color: #166534; margin: 0 0 20px; font-size: 20px; font-weight: 700;">
+              ✨ ما الذي يمكنكم القيام به الآن
+            </h3>
+            <ul style="margin: 0; padding: 0 0 0 20px; color: #14532d; font-size: 15px; line-height: 2;">
+              <li><strong>إدارة الحجوزات</strong> من خلال لوحة التحكم الخاصة بكم</li>
+              <li><strong>تحديث توفر الغرف</strong> بشكل فوري</li>
+              <li><strong>تحديد الأسعار الخاصة بكم</strong> بدون أي عمولات مخفية</li>
+              <li><strong>إضافة الصور والوصف</strong> لعرض فندقكم بشكل أفضل</li>
+            </ul>
+          </div>
+
+          <!-- Support section -->
+          <div style="background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); border-radius: 12px; padding: 25px; margin-bottom: 30px; border-right: 5px solid #eab308;">
+            <h3 style="color: #854d0e; margin: 0 0 15px; font-size: 20px; font-weight: 700;">
+              💡 هل تحتاجون إلى مساعدة؟
+            </h3>
+            <p style="color: #713f12; margin: 0 0 15px; font-size: 15px; line-height: 1.8;">
+              فريقنا هنا لدعمكم. سواء كنتم بحاجة إلى مساعدة في استخدام لوحة التحكم أو لديكم استفسارات حول إدارة الحجوزات، لا تترددوا في التواصل معنا.
+            </p>
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="mailto:support@naity.net" style="display: inline-block; background: #1a56db; color: white; padding: 14px 30px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px rgba(26, 86, 219, 0.3);">
+                📧 تواصل معنا: support@naity.net
+              </a>
+            </div>
+            <p style="color: #713f12; margin: 15px 0 0; font-size: 14px; text-align: center;">
+              📍 سوريا - دمشق
+            </p>
+          </div>
+
+          <!-- Closing message -->
+          <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+            <p style="color: #0369a1; margin: 0; font-size: 18px; font-weight: 700;">
+              شكراً لثقتكم بـ Naity! 🤝
+            </p>
+            <p style="color: #475569; margin: 10px 0 0; font-size: 15px;">
+              نتطلع إلى شراكة ناجحة معكم
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1e293b; padding: 30px; text-align: center; color: #94a3b8; font-size: 13px; line-height: 1.8;">
+          <p style="margin: 0 0 10px; font-weight: 600; color: #e2e8f0; font-size: 16px;">فريق Naity</p>
+          <p style="margin: 0 0 5px;">📧 support@naity.net | 🌐 naity.net</p>
+          <p style="margin: 10px 0 0; font-size: 12px; color: #64748b;">
+            © ${new Date().getFullYear()} Naity. جميع الحقوق محفوظة.
+          </p>
+        </div>
+      </div>
+    ` : `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; padding: 0; background: #ffffff;">
+        <!-- Header with gradient -->
+        <div style="background: linear-gradient(135deg, #1a56db 0%, #0369a1 100%); padding: 40px 30px; text-align: center; border-radius: 0;">
+          <h1 style="color: #ffffff; font-size: 36px; margin: 0 0 10px; font-weight: 700;">🏨 Naity</h1>
+          <p style="color: #e0f2fe; margin: 0; font-size: 16px; font-weight: 500;">Leading Hotel Booking Platform in Syria</p>
+        </div>
+
+        <!-- Main content -->
+        <div style="padding: 40px 30px;">
+          <!-- Welcome message -->
+          <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 5px solid #1a56db;">
+            <h2 style="color: #0369a1; margin: 0 0 15px; font-size: 28px; font-weight: 700;">Dear ${displayName} Team! 🎉</h2>
+            <p style="color: #0c4a6e; margin: 0; font-size: 16px; line-height: 1.8;">
+              <strong>Welcome to Naity!</strong> We're delighted to have you on board.
+            </p>
+            <p style="color: #0c4a6e; margin: 15px 0 0; font-size: 16px; line-height: 1.8;">
+              Your hotel has been successfully registered and is now visible to thousands of travellers looking for accommodations across Syria.
+            </p>
+          </div>
+
+          <!-- Hotel details -->
+          <div style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+            <h3 style="color: #1e293b; margin: 0 0 20px; font-size: 20px; font-weight: 700; border-bottom: 2px solid #1a56db; padding-bottom: 10px;">
+              📋 Your Hotel Details
+            </h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #475569; font-size: 15px;">
+                  🏨 Hotel Name
+                </td>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 15px; font-weight: 600;">
+                  ${displayName}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #475569; font-size: 15px;">
+                  📍 Location
+                </td>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 15px; font-weight: 600;">
+                  ${city || 'Syria'}
+                </td>
+              </tr>
+              ${stars ? `<tr>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #475569; font-size: 15px;">
+                  ⭐ Rating
+                </td>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 15px; font-weight: 600;">
+                  ${'⭐'.repeat(stars)}
+                </td>
+              </tr>` : ''}
+              <tr>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #475569; font-size: 15px;">
+                  ✅ Status
+                </td>
+                <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9;">
+                  <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-block;">
+                    🟢 Active
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 15px 10px; font-weight: 600; color: #475569; font-size: 15px;">
+                  📅 Registered On
+                </td>
+                <td style="padding: 15px 10px; color: #1e293b; font-size: 15px;">
+                  ${new Date(created_at || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- What you can do -->
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 12px; padding: 25px; margin-bottom: 30px; border-left: 5px solid #10b981;">
+            <h3 style="color: #166534; margin: 0 0 20px; font-size: 20px; font-weight: 700;">
+              ✨ What You Can Do Now
+            </h3>
+            <ul style="margin: 0; padding: 0 0 0 20px; color: #14532d; font-size: 15px; line-height: 2;">
+              <li><strong>Manage bookings</strong> through your dashboard</li>
+              <li><strong>Update room availability</strong> in real-time</li>
+              <li><strong>Set your own prices</strong> - no hidden commissions</li>
+              <li><strong>Add photos and descriptions</strong> to showcase your hotel</li>
+            </ul>
+          </div>
+
+          <!-- Support section -->
+          <div style="background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); border-radius: 12px; padding: 25px; margin-bottom: 30px; border-left: 5px solid #eab308;">
+            <h3 style="color: #854d0e; margin: 0 0 15px; font-size: 20px; font-weight: 700;">
+              💡 Need Help?
+            </h3>
+            <p style="color: #713f12; margin: 0 0 15px; font-size: 15px; line-height: 1.8;">
+              Our team is here to support you. Whether you need assistance with your dashboard or have questions about managing bookings, just reach out.
+            </p>
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="mailto:support@naity.net" style="display: inline-block; background: #1a56db; color: white; padding: 14px 30px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px rgba(26, 86, 219, 0.3);">
+                📧 Contact us: support@naity.net
+              </a>
+            </div>
+            <p style="color: #713f12; margin: 15px 0 0; font-size: 14px; text-align: center;">
+              📍 Syria - Damascus
+            </p>
+          </div>
+
+          <!-- Closing message -->
+          <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+            <p style="color: #0369a1; margin: 0; font-size: 18px; font-weight: 700;">
+              Thank you for trusting Naity! 🤝
+            </p>
+            <p style="color: #475569; margin: 10px 0 0; font-size: 15px;">
+              We look forward to a successful partnership
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1e293b; padding: 30px; text-align: center; color: #94a3b8; font-size: 13px; line-height: 1.8;">
+          <p style="margin: 0 0 10px; font-weight: 600; color: #e2e8f0; font-size: 16px;">Naity Team</p>
+          <p style="margin: 0 0 5px;">📧 support@naity.net | 🌐 naity.net</p>
+          <p style="margin: 10px 0 0; font-size: 12px; color: #64748b;">
+            © ${new Date().getFullYear()} Naity. All rights reserved.
+          </p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Hotel welcome email sent to ${contact_email} (${language})`);
+    return true;
+  } catch (err) {
+    console.error("❌ Failed to send hotel welcome email:", err.message);
     return false;
   }
 };
